@@ -1,5 +1,6 @@
 from config import *
-from bluetooth import BluetoothSocket, BluetoothError, L2CAP, discover_devices
+from bluetooth import BluetoothError
+from bluetooth import discover_devices
 
 def find_bluetooth_devices():
     """

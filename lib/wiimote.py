@@ -1,8 +1,9 @@
-import lib.handlers.buttons
-import lib.handlers.accelerometer
 from binascii import hexlify
 from threading import Thread 
-from bluetooth import BluetoothSocket, BluetoothError, L2CAP, discover_devices
+from bluetooth.bluez import BluetoothSocket, BluetoothError, L2CAP
+
+import lib.handlers.buttons
+import lib.handlers.accelerometer
 from config import *
 
 
@@ -62,13 +63,16 @@ class Wiimote(Thread):
         """
         c_sock = BluetoothSocket(L2CAP)
         r_sock = BluetoothSocket(L2CAP)
-      
+
+        
         try :
-            print "in estab"
+            print "socket created"
             c_sock.connect((self.mac, 0x11))
             print "c_sock ok"
             r_sock.connect((self.mac, 0x13))
             print "r_sock ok"
+
+
             r_sock.settimeout(SOCK_TIMEOUT_DURATION)
         except BluetoothError, be:
             print "[-] Wii-%d failed connecting : %s " % (self.number, be)

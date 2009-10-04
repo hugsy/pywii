@@ -30,19 +30,21 @@ if __name__ == "__main__":
         exit (129)
         
     wii_num = 1
-    wiimotes = []
+    wiimote_threads = []
     
     for wm in wiimote_addrs:
         if DEBUG: print "Creating Wiimote-%d" % wii_num
-        wiimotes.append( Wiimote(str(wm[0]), str(wm[1]), wii_num).start() )
+        wiimote = Wiimote(str(wm[0]), str(wm[1]), wii_num)
+        wiimote.start()
+        wiimote_threads.append(wiimote)
         
         wii_num += 1
         if wii_num > 4 :
             print "Cannot handle more than 4 Wiimotes"
             exit (130)
 
-    for wiimote in wiimotes :
-        if wiimote is not None :
-            wiimote.join()
+    if wii_num > 1:
+        for wm in wiimote_threads :
+            wm.join()
     
     exit (0)
