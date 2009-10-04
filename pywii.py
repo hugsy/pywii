@@ -12,10 +12,11 @@ __author__="hugsy"
 __version__=0.1
 __licence__="WTFPL v.2"
 __doc__="Yet another stupid tool"
-__file__="/home/chris/Documents/projets/pywii/pywii.py"
+__file__="/home/chris/code/pywii/pywii.py"
 
 from config import DEBUG
-from wiimote import Wiimote, find_wiimotes 
+from lib.wiimote import Wiimote
+from lib.base import find_wiimotes
 
 if __name__ == "__main__":
     # wiimote_addrs = find_wiimotes()

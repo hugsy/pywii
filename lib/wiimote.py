@@ -1,39 +1,10 @@
-import buttons_handler as bh
-import accelerometer_handler as ah
+import lib.handlers.buttons
+import lib.handlers.accelerometer
 from binascii import hexlify
 from threading import Thread 
 from bluetooth import BluetoothSocket, BluetoothError, L2CAP, discover_devices
 from config import *
 
-
-def find_bluetooth_devices():
-    """
-    look for all bluetooth devices
-    """
-    devices = None
-    try :
-        devices = discover_devices(duration=DISCOVER_DURATION,lookup_names=True)
-        if DEBUG : print devices
-    except bluetooth.btcommon.BluetoothError, be:
-        print "%s" % str(be)
-        devices = None
-        
-    return devices
-
-
-def find_wiimotes():
-    """
-    from all bluetooth devices, find Wiimote based on MAC address prefix
-    """
-    print "Searching for Wiimotes around for %d seconds" % DISCOVER_DURATION
-    wm = []
-    for dev in find_bluetooth_devices():
-        if dev[0].startswith("00:19:1D"):
-            print "Wiimote found ! \n\t"
-            print dev
-            wm.append(dev)
-                
-    return wm
 
 class Wiimote(Thread):
     """
@@ -167,12 +138,12 @@ class Wiimote(Thread):
 
         for idx in range(0,2) :
             # button analysis
-            buttons_list = bh.byte_to_button(buttons_bytes[idx], idx)
+            buttons_list = buttons.byte_to_button(buttons_bytes[idx], idx)
             table += buttons_list 
 
         if list_bytes[1] == MODE_BUTTON_ACCELEROMETER :
             # accelerometer handling
-            ah.update_position(acceler_bytes)
+            accelerometer.update_position(acceler_bytes)
             
         if DEBUG : print table
         return table

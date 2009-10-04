@@ -1,0 +1,5 @@
+# ignoring pre-compiled files ...
+*.pyc
+# ... and object files
+*.pyo
+
