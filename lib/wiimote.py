@@ -1,19 +1,27 @@
-from binascii import hexlify
-from threading import Thread 
+import binascii
+import threading
+import time
+import logging
 from bluetooth.bluez import BluetoothSocket, BluetoothError, L2CAP
 
-import lib.handlers.buttons
-import lib.handlers.accelerometer
+import lib.handlers.buttons as buttons
+import lib.handlers.accelerometer as accelerometer
 from config import *
 
+logging.basicConfig()
+logger = logging.getLogger("Wiimote.core")
+logger.setLevel(logging.DEBUG)
 
-class Wiimote(Thread):
+
+class Wiimote(threading.Thread):
     """
     this object manages all wiimote interactions. 
     """
-    
+
     def __init__ (self, mac, name, number):
-        Thread.__init__(self)
+        threading.Thread.__init__(self)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Creating a new wiimote thread")
         self.mac = mac
         self.name = name
         self.state  = 0
@@ -38,11 +46,12 @@ class Wiimote(Thread):
         """
         thread main program
         """
-        if DEBUG : print "[!] Starting Wiimote-%d" % self.number
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.info("Running")
         self.receive_socket, self.control_socket = self.establish_connection()
         if self.receive_socket is None or self.control_socket is None : 
             # if establishing connection fails
-            if DEBUG : print "[-] Failed to establish connection"
+            logger.critical("Failed to establish connection")
             self.change_state_notification(DISCONNECTED)
             return
         self.change_state_notification(CONNECTED)
@@ -54,7 +63,7 @@ class Wiimote(Thread):
     def change_state_notification(self, new_state):
         if new_state != self.state:
             self.state = new_state
-            print "[!] Changing Wii-%d status to : %s" % (self.number, STATUS[status])
+            logger.info("Change status to: %s" % STATUS[self.state])
         
     def establish_connection (self):
         """
@@ -64,18 +73,12 @@ class Wiimote(Thread):
         c_sock = BluetoothSocket(L2CAP)
         r_sock = BluetoothSocket(L2CAP)
 
-        
         try :
-            print "socket created"
             c_sock.connect((self.mac, 0x11))
-            print "c_sock ok"
             r_sock.connect((self.mac, 0x13))
-            print "r_sock ok"
-
-
             r_sock.settimeout(SOCK_TIMEOUT_DURATION)
         except BluetoothError, be:
-            print "[-] Wii-%d failed connecting : %s " % (self.number, be)
+            logger.error("Failed connecting: %s" % be)
             c_sock.close()
             r_sock.close()
             c_sock = None            
@@ -88,49 +91,53 @@ class Wiimote(Thread):
         """
         this function reads data to the wiimote and interprets every frame
         """
-        print "in transmit_data"
         while self.state == CONNECTED :
             try:
                 raw_data = self.receive_socket.recv(23)
-                frame = [ ]
+                frame = []
                 chaine = ''
                 
-                if len(raw_data):
-                    for raw_byte in raw_data:
-                        hex_value = hexlify(raw_byte)
-                        int_value = ord(raw_byte)
-                        frame.append(int_value)
-                        chaine += '0x'+hex_value+' '
+                
+                for raw_byte in raw_data:
+                    hex_value = binascii.hexlify(raw_byte)
+                    int_value = ord(raw_byte)
+                    frame.append(int_value)
+                    chaine += '0x'+hex_value+' '
 
-                    # let's make it raw 
-                    if len(chaine) and DEBUG : print chaine
+                # let's make it raw
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Packet: %s'%chaine) 
 
-                    # we need to convert those bytes into readable data
-                    list_buttons = self.interpret_frame(frame)
+                # we need to convert those bytes into readable data
+                list_buttons = self.interpret_frame(frame)
 
-                    # assigning each button to a specific action
-                    for button in list_buttons :
-                        if button == "home" :
-                            self.close_connection()
-                        if button == "1" :
-                            self.change_mode(MODE_BUTTON_ACCELEROMETER)
-                        if button == "2" :
-                            self.change_mode(MODE_BUTTON)
+                # assigning each button to a specific action
+                for button in list_buttons :
+                    if button == "home" :
+                        self.close_connection()
+                    if button == "1" :
+                        self.change_mode(MODE_BUTTON_ACCELEROMETER)
+                    if button == "2" :
+                        self.change_mode(MODE_BUTTON)
 
-            except BluetoothError, be :
-                print "[!] Exception raised %s" % str(be)
+            except BluetoothError:
                 pass
             
         return
 
     def close_connection(self):
-        if DEBUG : print "[!] Trying to gracefully shutdown"
+        """
+        Killing connection nicely. The good way to leave !
+        """
         self.receive_socket.close()
         self.control_socket.close()
-        self.change_state_notification(DISCONNECTED)        
-        print "[+] Wii-%d : Gracefully disconnected" % self.number
+        self.change_state_notification(DISCONNECTED) 
+        logger.info('Gracefully disconnected')
 
     def interpret_frame (self, list_bytes):
+        """
+        Applies one or more action(s) to a frame.
+        """
         # checking if we handle the suggested mode
         if not list_bytes[1] in (MODE_BUTTON,
                                  MODE_BUTTON_ACCELEROMETER):
@@ -138,7 +145,7 @@ class Wiimote(Thread):
         
         buttons_bytes = list_bytes[2:4]
         acceler_bytes = list_bytes[4:7]
-        table = [ ]
+        table = []
 
         for idx in range(0,2) :
             # button analysis
@@ -148,32 +155,38 @@ class Wiimote(Thread):
         if list_bytes[1] == MODE_BUTTON_ACCELEROMETER :
             # accelerometer handling
             accelerometer.update_position(acceler_bytes)
-            
-        if DEBUG : print table
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.info('Actions: ' + str(table))
+
         return table
 
     def send_control_frame(self, byte_table):
-        # control frame always start with \x52
+        """
+        Send a control frame on signalisation channel
+        """
+        # control frame always start with 0x52
         frame = chr(0x52)
-
-        for byte in byte_table:
-            frame += byte
-
+        for byte in byte_table: frame += byte
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.info('Sending %d byte control frame' % len(frame))
         self.control_socket.send(frame)
 
     def change_feature(self, mode):
-        # change feature frame starts with \x52\x11
-        print "[+] Wii-%d : Switching feature to %x" % (self.number,
-                                                        mode)
+        # change feature frame starts with 0x52 0x11
+        logger.info("Switching feature to 0x%x" % mode)
         features_hexa = chr(0x11)
         mode_hexa = chr(mode)
         hexa_table = (features_hexa, mode_hexa)
         self.send_control_frame(hexa_table)
 
     def change_mode(self, mode, persist_data=False):
-        # change mode frame start with \x52\x12
-        print "[+] Wii-%d : Switching mode to %s" % (self.number,
-                                                     hex(mode))
+        """
+        Allows to change mode:
+        2 modes for now : buttons (default) / accelerometer
+        """
+        # change mode frame start with 0x52 0x12
+        logger.info("Switching mode to 0x%x" % mode)
         mode_byte = chr(0x12)
 
         if persist_data :
