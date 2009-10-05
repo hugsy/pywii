@@ -37,11 +37,8 @@ def byte_to_button(byte_value , byte_number):
                 spec_button_list.append(button)
             elif button != '':
                 call(BUTTON_ACTION[button], shell=True)
-            else :
-                if logger.isEnabledFor(logging.DEBUG) :
-                    logger.error('Error on button')
             
-        offset = offset << 1
+        offset <<= 1
         index += 1
         
     return spec_button_list

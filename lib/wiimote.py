@@ -11,6 +11,13 @@ import lib.modules.accelerometer as accelerometer
 import lib.modules.led as led
 import lib.modules.rumble as rumble
 
+DISCONNECTED = 0x0
+CONNECTED = 0x1
+STATUS = {
+    DISCONNECTED : "Disconnected",
+    CONNECTED : "Connected",
+    }
+
 
 logging.basicConfig()
 logger = logging.getLogger("Wiimote.core")
@@ -32,6 +39,8 @@ class Wiimote(threading.Thread):
         self.receive_socket = None
         self.control_socket = None
         self.number = number
+
+        self.mode = MODE_BUTTON
         self.feature = 0x0000 
 
         # accelerometer information
@@ -125,9 +134,17 @@ class Wiimote(threading.Thread):
                     if button == "home" :
                         self.close_connection()
                     if button == "1" :
-                        self.change_mode(MODE_BUTTON_ACCELEROMETER)
-                    if button == "2" :
-                        self.change_mode(MODE_BUTTON)
+                        accel_flag = 1 << 0
+                        if self.mode & accel_flag :
+                            self.mode &= ~accel_flag
+                        else :
+                            self.mode |= accel_flag
+
+                        self.change_mode(self.mode)
+
+                    # if button == "2" :
+                        # en prevision de la camera : mode 0x34
+                        # self.change_mode(MODE_BUTTON)
 
             except BluetoothError:
                 pass
@@ -148,12 +165,12 @@ class Wiimote(threading.Thread):
         Applies one or more action(s) to a frame.
         """
         # checking if we handle the suggested mode
-        if not list_bytes[1] in (MODE_BUTTON,
-                                 MODE_BUTTON_ACCELEROMETER):
-            return []
-        
-        buttons_bytes = list_bytes[2:4]
-        acceler_bytes = list_bytes[4:7]
+        if list_bytes[1] & MODE_BUTTON:
+            buttons_bytes = list_bytes[2:4]
+            
+        if list_bytes[1] & MODE_BUTTON_ACCELEROMETER :
+            acceler_bytes = list_bytes[4:7]            
+
         table = []
 
         for idx in range(0,2) :
