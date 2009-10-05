@@ -4,9 +4,13 @@ import time
 import logging
 from bluetooth.bluez import BluetoothSocket, BluetoothError, L2CAP
 
-import lib.handlers.buttons as buttons
-import lib.handlers.accelerometer as accelerometer
 from config import *
+
+import lib.modules.buttons as buttons
+import lib.modules.accelerometer as accelerometer
+import lib.modules.led as led
+import lib.modules.rumble as rumble
+
 
 logging.basicConfig()
 logger = logging.getLogger("Wiimote.core")
@@ -28,6 +32,7 @@ class Wiimote(threading.Thread):
         self.receive_socket = None
         self.control_socket = None
         self.number = number
+        self.feature = 0x0000 
 
         # accelerometer information
         self.x = 0
@@ -48,16 +53,20 @@ class Wiimote(threading.Thread):
         """
         if logger.isEnabledFor(logging.DEBUG):
             logger.info("Running")
-        self.receive_socket, self.control_socket = self.establish_connection()
+            
+        (self.receive_socket, self.control_socket) = self.establish_connection()
         if self.receive_socket is None or self.control_socket is None : 
-            # if establishing connection fails
             logger.critical("Failed to establish connection")
             self.change_state_notification(DISCONNECTED)
             return
+
         self.change_state_notification(CONNECTED)
-        self.change_feature( 1 + 2**(3+self.number) )
-        time.sleep(1)
-        self.change_feature( 2**(3+self.number) )
+
+        ## module activation & test
+        rumble.setTimeRumble(self, 1)
+        led.blink(self, 1, 3)       
+        
+        ##  listen to received data
         self.transmit_data()
 
     def change_state_notification(self, new_state):
@@ -95,18 +104,18 @@ class Wiimote(threading.Thread):
             try:
                 raw_data = self.receive_socket.recv(23)
                 frame = []
-                chaine = ''
-                
+                chaine = ''               
                 
                 for raw_byte in raw_data:
-                    hex_value = binascii.hexlify(raw_byte)
                     int_value = ord(raw_byte)
                     frame.append(int_value)
+                    
+                    hex_value = binascii.hexlify(raw_byte)                    
                     chaine += '0x'+hex_value+' '
 
                 # let's make it raw
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Packet: %s'%chaine) 
+                    logger.debug('Frame received: %s'%chaine) 
 
                 # we need to convert those bytes into readable data
                 list_buttons = self.interpret_frame(frame)
@@ -173,6 +182,10 @@ class Wiimote(threading.Thread):
         self.control_socket.send(frame)
 
     def change_feature(self, mode):
+        """
+        Allows to change some features:
+        supported : led, rumble
+        """
         # change feature frame starts with 0x52 0x11
         logger.info("Switching feature to 0x%x" % mode)
         features_hexa = chr(0x11)
@@ -195,6 +208,5 @@ class Wiimote(threading.Thread):
             byte_mode_1=chr(0x00)
 
         byte_mode_2 = chr(mode)
-
         byte_table = (mode_byte, byte_mode_1, byte_mode_2)
         self.send_control_frame(byte_table)

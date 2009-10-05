@@ -27,8 +27,8 @@ BUTTON_ACTION = {
     "down": "",
     "plus": "amixer set PCM 2dB+",
     "minus": "amixer set PCM 2dB-",
-    "A": "",
-    "B": "",
+    "A": "/usr/bin/xmms --play-pause",
+    "B": "sudo acpitool -s",
     }
 
 # Those buttons are used by default by the application
