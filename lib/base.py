@@ -1,18 +1,18 @@
 from config import *
-from bluetooth import BluetoothError
+from bluetooth.btcommon import BluetoothError
 from bluetooth import discover_devices
 
 def find_bluetooth_devices():
     """
     look for all bluetooth devices
     """
-    devices = None
+    devices = []
     try :
         devices = discover_devices(duration=DISCOVER_DURATION,lookup_names=True)
         if DEBUG : print devices
-    except bluetooth.btcommon.BluetoothError, be:
+    except BluetoothError, be:
         print "%s" % str(be)
-        devices = None
+        devices = []
         
     return devices
 

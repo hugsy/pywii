@@ -3,6 +3,7 @@
 # -*- mode: python -*-
 
 """ 
+
 Simple tool to make a bit of fun with your wiimote.
 Can be used to interact with your system !
 
@@ -19,8 +20,8 @@ from lib.wiimote import Wiimote
 from lib.base import find_wiimotes
 
 if __name__ == "__main__":
-    # wiimote_addrs = find_wiimotes()
-    wiimote_addrs = [('00:19:1D:B7:43:0D', 'Nintendo RVL-CNT-01')]
+    wiimote_addrs = find_wiimotes()
+    # wiimote_addrs = [('00:19:1D:B7:43:0D', 'Nintendo RVL-CNT-01')]
 
     if wiimote_addrs is None :
         print "Fail to access bluetooth device"
