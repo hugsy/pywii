@@ -1,4 +1,3 @@
-import binascii
 import threading
 import time
 import logging
@@ -11,13 +10,6 @@ import lib.modules.accelerometer as accelerometer
 import lib.modules.led as led
 import lib.modules.rumble as rumble
 
-DISCONNECTED = 0x0
-CONNECTED = 0x1
-STATUS = {
-    DISCONNECTED : "Disconnected",
-    CONNECTED : "Connected",
-    }
-
 
 logging.basicConfig()
 logger = logging.getLogger("Wiimote.core")
@@ -29,18 +21,28 @@ class Wiimote(threading.Thread):
     this object manages all wiimote interactions. 
     """
 
+    DISCONNECTED = 0x0
+    CONNECTED = 0x1
+    STATUS = {
+        DISCONNECTED : "Disconnected",
+        CONNECTED : "Connected",
+        }
+    MODE_STATUS = 0x20
+    MODE_BUTTON = 0x30
+    MODE_BUTTON_ACCELEROMETER = MODE_BUTTON & 0x1
+
     def __init__ (self, mac, name, number):
         threading.Thread.__init__(self)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("Creating a new wiimote thread")
         self.mac = mac
         self.name = name
-        self.state  = 0
+        self.state = self.DISCONNECTED
         self.receive_socket = None
         self.control_socket = None
         self.number = number
 
-        self.mode = MODE_BUTTON
+        self.mode = self.MODE_BUTTON
         self.feature = 0x0000 
 
         # accelerometer information
@@ -48,42 +50,48 @@ class Wiimote(threading.Thread):
         self.y = 0
         self.z = 0
 
-    def __str__(self):
+    def __rep__(self):
         desc = "Description of Wiimote-%d: \n" % self.number
         desc += "\tMac address: %s\n" % self.mac
         desc += "\tName: %s\n" % self.name
-        desc += "\tState: %s\n" % STATUS[self.state]
+        desc += "\tState: %s\n" % self.STATUS[self.state]
         desc += "\n"
         return desc
+
+    def __str__(self):
+        desc = "Wiimote-%d" % self.number
+        desc += "(%s)" % self.STATUS[self.state]
         
     def run(self):
         """
-        thread main program
+        Thread main program :
+        this function establishes a BT connection and if succeeded,
+        starts reading data.
         """
         if logger.isEnabledFor(logging.DEBUG):
             logger.info("Running")
             
-        (self.receive_socket, self.control_socket) = self.establish_connection()
+        (self.receive_socket, self.control_socket) = self.establish()
         if self.receive_socket is None or self.control_socket is None : 
             logger.critical("Failed to establish connection")
-            self.change_state_notification(DISCONNECTED)
+            self.change_state_notification(self.DISCONNECTED)
             return
 
-        self.change_state_notification(CONNECTED)
+        self.change_state_notification(self.CONNECTED)
 
         ## module activation & test
-        rumble.setTimeRumble(self, 1)
-        led.blink(self, 1, 3)       
+        rumble.setTimeRumble(self, 1) # activates 1 sec rumbling
+        led.blink(self, 1, 1) # blinks 1 time of 1 second each
         
         ##  listen to received data
-        self.transmit_data()
+        self.read_data()
 
-    def change_state_notification(self, new_state):
-        if new_state != self.state:
-            self.state = new_state
-            logger.info("Change status to: %s" % STATUS[self.state])
+    def change_state_notification(self, newState):
+        if newState != self.state:
+            self.state = newState
+            logger.info("Change status to: %s" % self.STATUS[self.state])
         
-    def establish_connection (self):
+    def establish (self):
         """
         this function is used to establish_connection with the wiimote
         return None if cannot be done
@@ -92,116 +100,90 @@ class Wiimote(threading.Thread):
         r_sock = BluetoothSocket(L2CAP)
 
         try :
-            c_sock.connect((self.mac, 0x11))
-            r_sock.connect((self.mac, 0x13))
+            c_sock.connect((self.mac, 0x11)) # 0x11 : control channel
+            r_sock.connect((self.mac, 0x13)) # 0x13 : reception channel
             r_sock.settimeout(SOCK_TIMEOUT_DURATION)
         except BluetoothError, be:
             logger.error("Failed connecting: %s" % be)
             c_sock.close()
             r_sock.close()
-            c_sock = None            
+            c_sock = None 
             r_sock = None
 
         return (r_sock, c_sock)
     
         
-    def transmit_data(self):
+    def close(self):
         """
-        this function reads data to the wiimote and interprets every frame
+        Killing connection nicely. The good way to leave !
         """
-        while self.state == CONNECTED :
+        self.receive_socket.close()
+        self.control_socket.close()
+        self.change_state_notification(self.DISCONNECTED) 
+        logger.info('Gracefully disconnected')
+
+    def read_data(self):
+        """
+        This function reads data to the wiimote and interprets
+        every frame.
+        """
+        while self.state == self.CONNECTED :
             try:
                 raw_data = self.receive_socket.recv(23)
-                frame = []
-                chaine = ''               
-                
-                for raw_byte in raw_data:
-                    int_value = ord(raw_byte)
-                    frame.append(int_value)
-                    
-                    hex_value = binascii.hexlify(raw_byte)                    
-                    chaine += '0x'+hex_value+' '
+                frame = [ ord(x) for x in raw_data ]                
+                chaine = ''   
 
-                # let's make it raw
+                # this shit below is just for debug
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Frame received: %s'%chaine) 
+                    chaine = [ '0x%x' % x for x in frame ]
+                    logger.debug('Frame received: %s' % chaine) 
 
                 # we need to convert those bytes into readable data
-                list_buttons = self.interpret_frame(frame)
-
-                # assigning each button to a specific action
-                for button in list_buttons :
-                    if button == "home" :
-                        self.close_connection()
-                    if button == "1" :
-                        accel_flag = 1 << 0
-                        if self.mode & accel_flag :
-                            self.mode &= ~accel_flag
-                        else :
-                            self.mode |= accel_flag
-
-                        self.change_mode(self.mode)
-
-                    # if button == "2" :
-                        # en prevision de la camera : mode 0x34
-                        # self.change_mode(MODE_BUTTON)
+                self.parse_frame(frame)
 
             except BluetoothError:
                 pass
             
         return
 
-    def close_connection(self):
-        """
-        Killing connection nicely. The good way to leave !
-        """
-        self.receive_socket.close()
-        self.control_socket.close()
-        self.change_state_notification(DISCONNECTED) 
-        logger.info('Gracefully disconnected')
 
-    def interpret_frame (self, list_bytes):
+    def parse_frame (self, bytes):
         """
-        Applies one or more action(s) to a frame.
+        Applies one or more frame action(s).
+        First received byte is always 0xa1.
         """
-        # checking if we handle the suggested mode
-        if list_bytes[1] & MODE_BUTTON:
-            buttons_bytes = list_bytes[2:4]
-            
-        if list_bytes[1] & MODE_BUTTON_ACCELEROMETER :
-            acceler_bytes = list_bytes[4:7]            
+        if bytes[1] == self.MODE_STATUS:
+            self.get_status(bytes[2:])
 
-        table = []
+        # button handling            
+        if bytes[1] & self.MODE_BUTTON:
+            buttons_bytes = bytes[2:4]
 
         for idx in range(0,2) :
-            # button analysis
-            buttons_list = buttons.byte_to_button(buttons_bytes[idx], idx)
-            table += buttons_list 
+            buttons.execute(buttons_bytes[idx], idx, self)
 
-        if list_bytes[1] == MODE_BUTTON_ACCELEROMETER :
-            # accelerometer handling
-            accelerometer.update_position(acceler_bytes)
+        # accelerometer handling            
+        if bytes[1] & self.MODE_BUTTON_ACCELEROMETER :
+            acceler_bytes = bytes[4:7]            
+            
+        if bytes[1] == self.MODE_BUTTON_ACCELEROMETER :
+            accelerometer.update(acceler_bytes)
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.info('Actions: ' + str(table))
-
-        return table
-
-    def send_control_frame(self, byte_table):
+    def send_control_frame(self, bytes):
         """
         Send a control frame on signalisation channel
         """
         # control frame always start with 0x52
         frame = chr(0x52)
-        for byte in byte_table: frame += byte
+        frame += ''.join(bytes)
         if logger.isEnabledFor(logging.DEBUG):
             logger.info('Sending %d byte control frame' % len(frame))
         self.control_socket.send(frame)
 
     def change_feature(self, mode):
         """
-        Allows to change some features:
-        supported : led, rumble
+        Allows to change the Wiimote features.
+        Currently implemented supported: led, rumble.
         """
         # change feature frame starts with 0x52 0x11
         logger.info("Switching feature to 0x%x" % mode)
@@ -227,3 +209,36 @@ class Wiimote(threading.Thread):
         byte_mode_2 = chr(mode)
         byte_table = (mode_byte, byte_mode_1, byte_mode_2)
         self.send_control_frame(byte_table)
+
+    def request_status(self):
+        """
+        Request Wiimote status (battery level, connected extensions,
+        speaker/camera status ...)
+        Note : this will turn rumble off if activated
+        """
+        statusFrame = chr(0x15) + chr(0x00)
+        self.send_control_frame(statusFrame)
+
+    def get_status(self, report):
+        """
+        Display Wiimote status.
+        """
+        led_nibble = report[2] & 0xf0
+        stats_nibble = report[2] & 0x0f
+
+        stats = {
+            "Battery" : report[5],
+            "Low Battery" : stats_nibble & 0x01,
+            "Extension" : stats_nibble & 0x02,
+            "Speaker" : stats_nibble & 0x04,
+            "Camera" : stats_nibble & 0x08,
+            }
+            
+        status = "Wiimote-%d: %s\n" % (self.number, self.name)
+        for k in stats.keys() :
+            if k == "Battery" : v = "%d" % stats[k]
+            elif stats[k] : v = "On"
+            else : v = "Off"
+            status += "%s : %s\n" % (k,v)
+        
+        print (status)

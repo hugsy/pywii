@@ -1,47 +1,41 @@
 import ConfigParser
 
-MODE_BUTTON = 0x30
-MODE_BUTTON_ACCELEROMETER = 0x31
+cfg = ConfigParser.ConfigParser()
+cfg.read('config.ini')
 
-SLEEP_DURATION = 5
-SOCK_TIMEOUT_DURATION = 0.1
+DEBUG = cfg.get("main", "DEBUG")
+SLEEP_DURATION = int(cfg.get("main", "SLEEP_DURATION"))
+DISCOVER_DURATION = int(cfg.get("main", "DISCOVER_DURATION"))
+SOCK_TIMEOUT_DURATION = float(cfg.get("main", "SOCK_TIMEOUT_DURATION"))
 
-DEBUG = True
 
-DISCOVER_DURATION = 5
+# The following buttons MUST NOT BE BINDED
+# Used by framework
+# BUTTON_HOME -> exit
+# BUTTON_1 -> toggle accelerometer mode 
+# BUTTON_2 -> toggle camera mode (yet to come)
 
-# Buttons parameters
 BUTTON_ACTION = {
-    "left": "/usr/bin/xmms --rew",
-    "right": "/usr/bin/xmms --fwd",
-    "up": "",
-    "down": "",
-    "plus": "amixer set PCM 2dB+",
-    "minus": "amixer set PCM 2dB-",
-    "A": "/usr/bin/xmms --play-pause",
-    "B": "sudo acpitool -s",
+    "left": cfg.get("button_action", "BUTTON_ACTION_LEFT"),
+    "right": cfg.get("button_action", "BUTTON_ACTION_RIGHT"),
+    "up": cfg.get("button_action", "BUTTON_ACTION_UP"),
+    "down": cfg.get("button_action", "BUTTON_ACTION_DOWN"),
+    "plus": cfg.get("button_action", "BUTTON_ACTION_PLUS"),
+    "minus": cfg.get("button_action", "BUTTON_ACTION_MINUS"),
+    "A": cfg.get("button_action", "BUTTON_ACTION_A"),
+    "B": cfg.get("button_action", "BUTTON_ACTION_B"),
     }
 
-# Those buttons are used by default by the application
-# BUTTON_HOME = ""
-# BUTTON_1 = ""
-# BUTTON_2 = ""
+ACCELEROMETER_ZERO = int(cfg.get("accel_config", "ACCELEROMETER_ZERO"))
+ACCELEROMETER_PRECISION = int(cfg.get("accel_config", "ACCELEROMETER_PRECISION"))
 
-# Accelerometer parameters
-ACCELEROMETER_ZERO = 0x80
-ACCELEROMETER_PRECISION = 0x20
-
-ACCEL_X_LEFT_ACTION  = "/usr/bin/xmms --rew"
-ACCEL_X_RIGHT_ACTION = "/usr/bin/xmms --fwd"
-ACCEL_Y_UP_ACTION    = "echo VERT_UP > /dev/null"
-ACCEL_Y_DOWN_ACTION  = "echo VERT_DOWN > /dev/null"
-ACCEL_Z_FRONT_ACTION = "echo DEPTH_FRONT > /dev/null"
-ACCEL_Z_BACK_ACTION  = "echo DEPTH_BACK > /dev/null"
-
-
-def readConfig(file="config.ini"):
-    Config = ConfigParser.ConfigParser()
-    Config.read(file)
-    sections = Config.sections()
-
+ACCEL_ACTION = {
+    "left": cfg.get("accel_action", "ACCEL_X_LEFT_ACTION"),
+    "right": cfg.get("accel_action", "ACCEL_X_RIGHT_ACTION"),
+    "up": cfg.get("accel_action", "ACCEL_Y_UP_ACTION"),
+    "down": cfg.get("accel_action", "ACCEL_Y_DOWN_ACTION"),
+    "front": cfg.get("accel_action", "ACCEL_Z_FRONT_ACTION"),
+    "back": cfg.get("accel_action", "ACCEL_Z_BACK_ACTION"),
+    }
+    
                                         

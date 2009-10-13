@@ -2,12 +2,14 @@ from config import *
 import logging
 from subprocess import call
 
-
 logging.basicConfig()
 logger = logging.getLogger("Wiimote.accelerometer")
 logger.setLevel(logging.DEBUG)
 
-def update_position(list_bytes):
+def update(list_bytes):
+    """
+    extract positions from frame
+    """
     x = list_bytes[0]
     y = list_bytes[1]
     z = list_bytes[2]
@@ -16,41 +18,49 @@ def update_position(list_bytes):
     update_vertical(y)
     update_depth(z)
 
+
+def perform_action(move):
+    """
+    execute system call corresponding to movement
+    """
+    if move not in ('up','down','left','right','back','front'):
+        logger.error("Unknown movement %s" % move)
+        return
+    
+    if logger.isEnabledFor(logging.DEBUG) :
+        logger.debug("%s movement detected" % move)
+        
+    call(ACCEL_ACTION[move], shell=True)
+    
     
 def update_horizon(x_pos):
-    # detecting horizontal movement
+    """
+    detecting horizontal movement
+    """
     if x_pos < ACCELEROMETER_ZERO - ACCELEROMETER_PRECISION :
-        if logger.isEnabledFor(logging.DEBUG) :
-            logger.debug("Horizontal (left) movement detected")
-        call(ACCEL_X_LEFT_ACTION, shell=True)
+        perform_action('left')
         
     if x_pos > ACCELEROMETER_ZERO + ACCELEROMETER_PRECISION :
-        if logger.isEnabledFor(logging.DEBUG) :
-            logger.debug("Horizontal (right) movement detected")
-        call(ACCEL_X_RIGHT_ACTION, shell=True)
+        perform_action('right')
 
         
-def update_vertical(y_pos):        
-    ## detecting depth movement
+def update_vertical(y_pos):
+    """
+    detecting depth movement
+    """
     if y_pos > ACCELEROMETER_ZERO + ACCELEROMETER_PRECISION :
-        if logger.isEnabledFor(logging.DEBUG) :        
-            logger.debug("Vertical (front) movement detected")
-        # call(ACCEL_Z_FRONT_ACTION, shell=True)
+        perform_action('front')
         
     if y_pos < ACCELEROMETER_ZERO - ACCELEROMETER_PRECISION :
-        if logger.isEnabledFor(logging.DEBUG) :        
-            logger.debug("Vertical (back) movement detected")        
-        # call(ACCEL_Z_BACK_ACTION, shell=True)
+        perform_action('back')
 
             
 def update_depth(z_pos):
-    ## detecting vertical movement
+    """
+    detecting vertical movement
+    """
     if z_pos < ACCELEROMETER_ZERO - ACCELEROMETER_PRECISION :
-        if logger.isEnabledFor(logging.DEBUG) :        
-            logger.debug("Depth (up) movement detected")
-        # call(ACCEL_Y_UP_ACTION, shell=True)
-
+        perform_action('up')
+        
     if z_pos > ACCELEROMETER_ZERO + ACCELEROMETER_PRECISION :
-        if logger.isEnabledFor(logging.DEBUG) :        
-            logger.debug("Depth (down) movement detected")
-        # call(ACCEL_Y_DOWN_ACTION, shell=True)
+        perform_action('down')
