@@ -7,13 +7,23 @@ __file__ = "/home/chris/code/pywii/pywii.py"
 __doc__ = """ 
 
 This simple tool was basically written because I'm lazy,
-and is purposed to make a bit of fun with your wiimote by
-(simply) interacting with your system. Some events (buttons
-pressing, wiimote moves) can be match to perform a specific
-action on your system.
+and is purposed to make a bit of fun with your wiimote
+allowing to interact (simply) with your system. Some events
+(buttons pressing, wiimote moves) can be match to perform a
+specific action on your system.
 
 Up to 4 Wiimotes can be used simultaneously (but I don't see
 the point in that :) ).
+
+Features provided :
+- full button handling (native since v0.1)
+- led handler
+- rumble handler
+- accelerometer handler
+
+Yet-to-come features :
+- speaker (I'm actually working on it right now)
+- camera 
 
 All suggestions welcomed.
 
