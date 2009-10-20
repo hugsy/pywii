@@ -17,13 +17,17 @@ from lib.base import find_wiimotes
 
 if __name__ == "__main__":
     if DEBUG :
-        wiimote_addrs = [('00:19:1D:B7:43:0D', 'Nintendo RVL-CNT-01')]        
+        wiimote_addrs = [('00:19:1D:B7:43:0D', 'Nintendo RVL-CNT-01')]
     else :
         wiimote_addrs = find_wiimotes()
 
     if len(wiimote_addrs) == 0 :
         print "No Wiimote found"
         exit (129)
+
+    elif len(wiimote_addrs) > 4 :
+        print "Cannot handle more than 4 Wiimotes for the moment"
+        exit (130)
         
     wii_num = 1
     wiimote_threads = []
@@ -35,12 +39,9 @@ if __name__ == "__main__":
         wiimote_threads.append(wiimote)
         
         wii_num += 1
-        if wii_num > 4 :
-            print "Cannot handle more than 4 Wiimotes"
-            exit (130)
 
-    if wii_num > 1:
-        for wm in wiimote_threads :
-            wm.join()
+
+    for wm in wiimote_threads :
+        wm.join()
     
     exit (0)
