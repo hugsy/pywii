@@ -2,19 +2,15 @@ import threading
 import time
 import logging
 from bluetooth.bluez import BluetoothSocket, BluetoothError, L2CAP
-
-from config import *
-
+from config import SOCK_TIMEOUT_DURATION
 import lib.modules.buttons as buttons
 import lib.modules.accelerometer as accelerometer
 import lib.modules.led as led
 import lib.modules.rumble as rumble
 
-
 logging.basicConfig()
 logger = logging.getLogger("Wiimote.core")
 logger.setLevel(logging.DEBUG)
-
 
 DISCONNECTED = 0x0
 CONNECTED = 0x1
@@ -24,7 +20,7 @@ STATUS = {
     }
 MODE_STATUS = 0x20
 MODE_BUTTON = 0x30
-MODE_BUTTON_ACCELEROMETER = MODE_BUTTON & 0x1
+MODE_BUTTON_ACCELEROMETER = MODE_BUTTON | 0x1
 
 class Wiimote(threading.Thread):
     """
@@ -87,15 +83,15 @@ class Wiimote(threading.Thread):
         starts reading data.
         """
         if logger.isEnabledFor(logging.DEBUG):
-            logger.info("Running")
+            logger.info("Starting %s" % str(self))
             
         (self.receive_socket, self.control_socket) = self.establish()
         if self.receive_socket is None or self.control_socket is None : 
             logger.critical("Failed to establish connection")
-            self.change_state_notification(DISCONNECTED)
+            self.set_state(DISCONNECTED)
             return
 
-        self.change_state_notification(CONNECTED)
+        self.set_state(CONNECTED)
 
         ## module activation & test
         rumble.setTimeRumble(self, 1) # activates 1 sec rumbling
@@ -104,7 +100,7 @@ class Wiimote(threading.Thread):
         ##  listen to received data
         self.read_data()
 
-    def change_state_notification(self, newState):
+    def set_state (self, newState):
         if newState != self.state:
             self.state = newState
             logger.info("Change status to: %s" % STATUS[self.state])
@@ -136,7 +132,7 @@ class Wiimote(threading.Thread):
         """
         self.receive_socket.close()
         self.control_socket.close()
-        self.change_state_notification(DISCONNECTED) 
+        self.set_state(DISCONNECTED) 
         logger.info('Gracefully disconnected')
 
     def read_data(self):
@@ -162,7 +158,6 @@ class Wiimote(threading.Thread):
                 pass
 
 
-
     def parse_frame (self, bytes):
         """
         Applies one or more frame action(s).
@@ -176,7 +171,7 @@ class Wiimote(threading.Thread):
         if bytes[1] & MODE_BUTTON:
             buttons_bytes = bytes[2:4]
 
-        for idx in range(0,2) :
+        for idx in range(2) :
             buttons.execute(buttons_bytes[idx], idx, self)
 
         # accelerometer handling            
@@ -191,8 +186,10 @@ class Wiimote(threading.Thread):
         Only send the frame over the signalisation channel
         """
         if logger.isEnabledFor(logging.DEBUG):
-            logger.info('Sending %d byte control frame' % len(frame))
-
+            chaine = [ '0x%x' % ord(x) for x in frame ]
+            logger.debug('Frame sent: %s' % chaine) 
+        
+        frame = ''.join(frame)
         self.control_socket.send(frame)
         
     def send_control_frame(self, bytes):
@@ -200,9 +197,8 @@ class Wiimote(threading.Thread):
         Prepare a control frame on signalisation channel
         """
         # control frame always start with 0x52
-        frame = chr(0x52)
-        frame += ''.join(bytes)
-        return frame
+        bytes.insert(0, chr(0x52))
+        self.send_data(bytes)
 
     def change_feature(self, mode):
         """
@@ -211,10 +207,10 @@ class Wiimote(threading.Thread):
         """
         # change feature frame starts with 0x52 0x11
         logger.info("Switching feature to 0x%x" % mode)
-        features_hexa = chr(0x11)
-        mode_hexa = chr(mode)
-        hexa_table = (features_hexa, mode_hexa)
-        self.send_control_frame(hexa_table)
+        features_code = chr(0x11)
+        mode_code = chr(mode)
+        bytes = [features_code, mode_code]
+        self.send_control_frame(bytes)
 
     def change_mode(self, mode, persist_data=False):
         """
@@ -226,12 +222,12 @@ class Wiimote(threading.Thread):
         mode_byte = chr(0x12)
 
         if persist_data :
-            byte_mode_1=chr(0x04)
+            byte_mode_1 = chr(0x04)
         else :
-            byte_mode_1=chr(0x00)
+            byte_mode_1 = chr(0x00)
 
         byte_mode_2 = chr(mode)
-        bytes = (mode_byte, byte_mode_1, byte_mode_2)
+        bytes = [mode_byte, byte_mode_1, byte_mode_2]
         self.send_control_frame(bytes)
 
     def request_status(self):
@@ -240,7 +236,7 @@ class Wiimote(threading.Thread):
         speaker/camera status ...)
         Note : this will turn rumble off if activated
         """
-        statusFrame = chr(0x15) + chr(0x00)
+        statusFrame = [chr(0x15), chr(0x00)]
         self.send_control_frame(statusFrame)
 
     def print_status(self, report):
@@ -258,7 +254,7 @@ class Wiimote(threading.Thread):
             "Camera" : stats_nibble & 0x08,
             }
             
-        status = self.__str__()
+        status = str(self) + "\n"
         
         for k in stats.keys() :
             if k == "Battery" : v = "%d" % stats[k]

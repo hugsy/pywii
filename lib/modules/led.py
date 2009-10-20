@@ -1,5 +1,9 @@
-import time
+"""
 
+This module handles the LED mechanism.
+
+"""
+import time
 
 def switchLed(wiimote):
     """

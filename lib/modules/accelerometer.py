@@ -1,4 +1,12 @@
-from config import *
+"""
+
+Those functions interprets accelerometer movement. It is a bit fuzzy,
+but is really coherent after a short moment.
+Please see http://wiibrew.org/wiki/Wiimote#Accelerometer for more
+details
+
+"""
+from config import ACCELEROMETER_ZERO, ACCELEROMETER_PRECISION, ACCEL_ACTION
 import logging
 from subprocess import call
 
@@ -6,13 +14,13 @@ logging.basicConfig()
 logger = logging.getLogger("Wiimote.accelerometer")
 logger.setLevel(logging.DEBUG)
 
-def update(list_bytes):
+def update(bytes):
     """
-    extract positions from frame
+    Extract positions from frame.
     """
-    x = list_bytes[0]
-    y = list_bytes[1]
-    z = list_bytes[2]
+    x = bytes[0]
+    y = bytes[1]
+    z = bytes[2]
 
     update_horizon(x)
     update_vertical(y)
@@ -21,7 +29,7 @@ def update(list_bytes):
 
 def perform_action(move):
     """
-    execute system call corresponding to movement
+    Execute system call corresponding to movement
     """
     if move not in ('up','down','left','right','back','front'):
         logger.error("Unknown movement %s" % move)
@@ -35,7 +43,7 @@ def perform_action(move):
     
 def update_horizon(x_pos):
     """
-    detecting horizontal movement
+    Detecting horizontal movement
     """
     if x_pos < ACCELEROMETER_ZERO - ACCELEROMETER_PRECISION :
         perform_action('left')
@@ -46,7 +54,7 @@ def update_horizon(x_pos):
         
 def update_vertical(y_pos):
     """
-    detecting depth movement
+    Detecting depth movement
     """
     if y_pos > ACCELEROMETER_ZERO + ACCELEROMETER_PRECISION :
         perform_action('front')
@@ -57,7 +65,7 @@ def update_vertical(y_pos):
             
 def update_depth(z_pos):
     """
-    detecting vertical movement
+    Detecting vertical movement
     """
     if z_pos < ACCELEROMETER_ZERO - ACCELEROMETER_PRECISION :
         perform_action('up')

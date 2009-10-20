@@ -41,11 +41,9 @@ if __name__ == "__main__":
 
     if len(wiimote_addrs) == 0 :
         print ("No Wiimote found")
-        exit (129)
-
+        exit (128)
     elif len(wiimote_addrs) > 4 :
-        print "Cannot handle more than 4 Wiimotes for the moment"
-        exit (130)
+        print ("Cannot handle more than 4 Wiimotes for the moment")
         
     wii_num = 1
     wiimote_threads = []
@@ -57,11 +55,9 @@ if __name__ == "__main__":
         wiimote_threads.append(wiimote)
         
         wii_num += 1
+        if wii_num > 4 : break
 
-        if wii_num > 4 :
-            print ("Cannot handle more than 4 Wiimotes")
-            exit (130)
-
-    for wm in wiimote_threads : wm.join()
+    for wm in wiimote_threads :
+        wm.join()
     
     exit (0)

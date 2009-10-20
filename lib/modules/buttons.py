@@ -1,23 +1,13 @@
-from config import *
+from config import BUTTON_HOME, BUTTON_1, BUTTON_2, \
+    BUTTON_NULL, BUTTON_UP, BUTTON_DOWN, BUTTON_RIGHT, \
+    BUTTON_LEFT, BUTTON_PLUS, BUTTON_MINUS, BUTTON_A, BUTTON_B, \
+    BUTTON_ACTION
 import logging
 from subprocess import call
 
 logging.basicConfig()
 logger = logging.getLogger("Wiimote.buttons")
 logger.setLevel(logging.DEBUG)
-
-BUTTON_NULL  = 0x00
-BUTTON_A     = 0x01
-BUTTON_B     = 0x02
-BUTTON_UP    = 0x03
-BUTTON_DOWN  = 0x04
-BUTTON_LEFT  = 0x05
-BUTTON_RIGHT = 0x06
-BUTTON_MINUS = 0x07
-BUTTON_PLUS  = 0x08
-BUTTON_HOME  = 0x09
-BUTTON_1     = 0x10
-BUTTON_2     = 0x11
 
 def execute(byte_value, byte_number, wiimote):
     """
@@ -38,13 +28,7 @@ def execute(byte_value, byte_number, wiimote):
         button = None
         
         if byte_value & offset :
-            if logger.isEnabledFor(logging.DEBUG) :
-                logger.info("flag 0x%x on %d at 0x%x"%(offset,
-                                                       byte_number,
-                                                       index))
             button = get_button(index, byte_number)
-            if logger.isEnabledFor(logging.DEBUG) :
-                logger.debug('Button flags:' + button)
 
             # button treatment
             ## special buttons for management

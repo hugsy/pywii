@@ -1,9 +1,14 @@
-import time
+"""
 
+This module handles the rumble on the Wiimote
+
+"""
+
+import time
 
 def switchRumble(wiimote):
     """
-    Switch the rumble
+    Switch the rumble.
     """
     rumble_flag = 1 << 0
     
@@ -17,8 +22,7 @@ def switchRumble(wiimote):
 
 def setTimeRumble(wiimote, dur):
     """
-    Activate the rumbe for dur seconds then
-    shut it down.
+    Activate the rumbe for dur seconds then shut it down.
     """
     switchRumble(wiimote)
     time.sleep(dur)
