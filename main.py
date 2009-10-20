@@ -1,15 +1,33 @@
 #!/usr/bin/env python
+
+__author__ = "hugsy"
+__version__ = 0.2
+__licence__ = "WTFPL v.2"
+__file__ = "/home/chris/code/pywii/pywii.py"
+__doc__ = """ 
+
+This simple tool was basically written because I'm lazy,
+and is purposed to make a bit of fun with your wiimote
+allowing to interact (simply) with your system. Some events
+(buttons pressing, wiimote moves) can be match to perform a
+specific action on your system.
+
+Up to 4 Wiimotes can be used simultaneously (but I don't see
+the point in that :) ).
+
+Features provided :
+- full button handling (native since v0.1)
+- led handler
+- rumble handler
+- accelerometer handler
+
+Yet-to-come features :
+- speaker (I'm actually working on it right now)
+- camera 
+
+All suggestions welcomed.
+
 """ 
-
-Simple tool to make a bit of fun with your wiimote.
-Can be used to interact with your system !
-
-""" 
-
-__author__="hugsy"
-__version__=0.1
-__licence__="WTFPL v.2"
-__file__="/home/chris/code/pywii/pywii.py"
 
 from config import DEBUG
 from lib.wiimote import Wiimote
@@ -22,7 +40,7 @@ if __name__ == "__main__":
         wiimote_addrs = find_wiimotes()
 
     if len(wiimote_addrs) == 0 :
-        print "No Wiimote found"
+        print ("No Wiimote found")
         exit (129)
 
     elif len(wiimote_addrs) > 4 :
@@ -33,15 +51,17 @@ if __name__ == "__main__":
     wiimote_threads = []
     
     for wm in wiimote_addrs:
-        if DEBUG: print "Creating Wiimote-%d" % wii_num
+        print ("Creating Wiimote-%d" % wii_num)
         wiimote = Wiimote(str(wm[0]), str(wm[1]), wii_num)
         wiimote.start()
         wiimote_threads.append(wiimote)
         
         wii_num += 1
 
+        if wii_num > 4 :
+            print ("Cannot handle more than 4 Wiimotes")
+            exit (130)
 
-    for wm in wiimote_threads :
-        wm.join()
+    for wm in wiimote_threads : wm.join()
     
     exit (0)
