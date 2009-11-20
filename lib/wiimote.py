@@ -3,6 +3,7 @@ import time
 import logging
 from bluetooth.bluez import BluetoothSocket, BluetoothError, L2CAP
 from config import SOCK_TIMEOUT_DURATION
+
 import lib.modules.buttons as buttons
 import lib.modules.accelerometer as accelerometer
 import lib.modules.led as led
@@ -13,7 +14,7 @@ logger = logging.getLogger("Wiimote.core")
 logger.setLevel(logging.DEBUG)
 
 DISCONNECTED = 0x0
-CONNECTED = 0x1
+CONNECTED    = 0x1
 STATUS = {
     DISCONNECTED : "Disconnected",
     CONNECTED : "Connected",
@@ -47,24 +48,26 @@ class Wiimote(threading.Thread):
         threading.Thread.__init__(self)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("Creating a new wiimote thread")
-        self.mac = mac
-        self.name = name
-        self.state = DISCONNECTED
+
+        # wiimote attributes
+        self.mac            = mac
+        self.name           = name
+        self.state          = DISCONNECTED
         self.receive_socket = None
         self.control_socket = None
-        self.number = number
+        self.number         = number
 
         # enable button mode w/ no extra feature
-        self.mode = MODE_BUTTON
-        self.feature = 0x0000 
+        self.mode           = MODE_BUTTON
+        self.feature        = 0x00
 
         # accelerometer information
-        self.x = 0
-        self.y = 0
-        self.z = 0
+        self.x              = 0
+        self.y              = 0
+        self.z              = 0
 
     def __repr__(self):
-        desc = "Description of Wiimote-%d: \n" % self.number
+        desc  = "Description of Wiimote-%d: \n" % self.number
         desc += "\tMac address: %s\n" % self.mac
         desc += "\tName: %s\n" % self.name
         desc += "\tState: %s\n" % STATUS[self.state]
@@ -84,27 +87,40 @@ class Wiimote(threading.Thread):
         """
         if logger.isEnabledFor(logging.DEBUG):
             logger.info("Starting %s" % str(self))
-            
-        (self.receive_socket, self.control_socket) = self.establish()
-        if self.receive_socket is None or self.control_socket is None : 
-            logger.critical("Failed to establish connection")
-            self.set_state(DISCONNECTED)
-            return
 
-        self.set_state(CONNECTED)
+        while True :
+            (self.receive_socket, self.control_socket) = self.establish()
+            if self.receive_socket is None or self.control_socket is None : 
+                logger.critical("Failed to establish connection")
+                self.set_state(DISCONNECTED)
+                logger.info("Retrying in 5 seconds")
+                time.sleep(5)
+                continue
 
-        ## module activation & test
-        rumble.setTimeRumble(self, 1) # activates 1 sec rumbling
-        led.blink(self, 1, 1) # blinks 1 time of 1 second each
+            self.set_state(CONNECTED)
+
+            # module activation & test
+            rumble.setTimeRumble(self, 1) # activates 1 sec rumbling
+            led.blink(self, 1, 1) # blinks 1 time of 1 second each
         
-        ##  listen to received data
-        self.read_data()
+            # listen for data
+            self.read_data()
 
+            # if asked to close connection
+            if self.get_state() == DISCONNECTED :
+                return 
+
+            
     def set_state (self, newState):
         if newState != self.state:
             self.state = newState
             logger.info("Change status to: %s" % STATUS[self.state])
-        
+
+            
+    def get_state(self):
+        return self.state
+
+    
     def establish(self):
         """
         this function is used to establish_connection with the wiimote
@@ -125,7 +141,8 @@ class Wiimote(threading.Thread):
             r_sock = None
 
         return (r_sock, c_sock)
-            
+
+    
     def close(self):
         """
         Killing connection nicely. The good way to leave !
@@ -135,21 +152,27 @@ class Wiimote(threading.Thread):
         self.set_state(DISCONNECTED) 
         logger.info('Gracefully disconnected')
 
+        
     def read_data(self):
         """
         This function reads data to the wiimote and interprets
         every frame.
         """
-        while self.state == CONNECTED :
+        self.request_status()
+        
+        while self.get_state() == CONNECTED :
             try:
                 raw_data = self.receive_socket.recv(23)
-                frame = [ ord(x) for x in raw_data ]                
-                chaine = ''   
+                if not raw_data :
+                    continue
 
-                # this shit below is just for debug
+                frame = [ ord(x) for x in raw_data ]
+                if len(frame) < 2:
+                    continue
+
+                # this hack below is just for debug
                 if logger.isEnabledFor(logging.DEBUG):
-                    chaine = [ '0x%x' % x for x in frame ]
-                    logger.debug('Frame received: %s' % chaine) 
+                    logger.debug('Frame received: %s' % [ '0x%x' % x for x in frame ] )
 
                 # we need to convert those bytes into readable data
                 self.parse_frame(frame)
@@ -247,11 +270,11 @@ class Wiimote(threading.Thread):
         stats_nibble = report[2] & 0x0f
 
         stats = {
-            "Battery" : report[5],
-            "Low Battery" : stats_nibble & 0x01,
-            "Extension" : stats_nibble & 0x02,
-            "Speaker" : stats_nibble & 0x04,
-            "Camera" : stats_nibble & 0x08,
+            "Battery"      : report[5],
+            "Low Battery"  : stats_nibble & 0x01,
+            "Extension"    : stats_nibble & 0x02,
+            "Speaker"      : stats_nibble & 0x04,
+            "Camera"       : stats_nibble & 0x08,
             }
             
         status = str(self) + "\n"
