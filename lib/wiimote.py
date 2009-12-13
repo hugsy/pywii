@@ -8,6 +8,7 @@ import lib.modules.buttons as buttons
 import lib.modules.accelerometer as accelerometer
 import lib.modules.led as led
 import lib.modules.rumble as rumble
+from lib.modules.speaker import Speaker
 
 logging.basicConfig()
 logger = logging.getLogger("Wiimote.core")
@@ -41,7 +42,7 @@ class Wiimote(threading.Thread):
     - if succeeded, runs a loop to read data unless user asks for
     disconnection
 
-    Features have been added to handle :
+    Features that have been added to handle :
     - wiimote buttons, which integrated since 0.2. Button actions 
     must be specified in the configuration file
     - accelerometer, with the possibility to perform actions upon
@@ -75,6 +76,10 @@ class Wiimote(threading.Thread):
         self.x              = 0
         self.y              = 0
         self.z              = 0
+
+        # speaker implementation
+        self.speaker    = Speaker(self)
+        
 
     def __repr__(self):
         desc  = "Description of Wiimote-%d: \n" % self.number
@@ -296,3 +301,19 @@ class Wiimote(threading.Thread):
             status += "%s : %s\n" % (k,v)
         
         print (status)
+
+        
+    def write_registers(self, address_bytes, data_bytes):
+        """
+        Write len(data_bytes) bytes at offset pointed by address_bytes
+        """
+        bytes = [chr(0x16), chr(0x04)]
+        bytes += [ chr(x) for x in address_bytes ]
+        bytes.append(chr(len(data_bytes)))
+        bytes += [ chr(x) for x in data_bytes ]
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Write %s at %s" % (data_bytes, address_bytes))
+        
+        self.send_control_frame(bytes)
+        
