@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-# $File: /home/chris/code/pywii/main.py $
-# $MD5: 04ab45d4f2024774185bcc7d5f44c587 $
-# $By hugsy <tuxxychris[at]gmail[dot]com>$
-# $Last-Modified: Sat Oct 24 16:33:03 2009$
+# $ File: /home/chris/code/pywii/main.py $
+# $ MD5: 7fc0955fb4163304155c0c3ccb12908c $
+# $ By Chris A <tuxxychris[at]gmail[dot]com> $ 
+# $ Last-Modified: Sun Dec 13 16:50:26 2009 $ 
 
 __author__  = "hugsy"
 __version__ = 0.2
@@ -38,8 +38,8 @@ from lib.wiimote import Wiimote
 from lib.base import find_wiimotes
 
 if __name__ == "__main__":
-    wiimote_addrs = [('00:19:1D:B7:43:0D', 'Nintendo RVL-CNT-01')]
-    # wiimote_addrs = find_wiimotes()
+    # wiimote_addrs = [('00:19:1D:B7:43:0D', 'Nintendo RVL-CNT-01')]
+    wiimote_addrs = find_wiimotes()
 
     if len(wiimote_addrs) == 0 :
         print ("No Wiimote found")

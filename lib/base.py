@@ -7,8 +7,9 @@ def find_bluetooth_devices():
     Look for all bluetooth devices around.
     """
     devices = []
+    print ("Looking for Bluetooth device for %d seconds" % DISCOVER_DURATION)
     try :
-        devices = discover_devices(duration=DISCOVER_DURATION,
+        devices = discover_devices(duration=5,
                                    lookup_names=True)
     except BluetoothError, be:
         print ("%s" % str(be))
@@ -19,15 +20,12 @@ def find_bluetooth_devices():
 
 def find_wiimotes():
     """
-    From all bluetooth devices, find Wiimote based on MAC address prefix
+    From all bluetooth devices, find Wiimote based on MAC address prefix and
+    pseudo-named interface
     """
-    print ("Searching for Wiimotes around for %d seconds" % DISCOVER_DURATION)
-    wm = []
-    for dev in find_bluetooth_devices():
-        if dev[0].startswith("00:19:1D"):
-            print ("Wiimote found ! \n\t")
-            print ("%s" % dev)
-            wm.append(dev)
+    
+    return [ dev \
+                 for dev in find_bluetooth_devices() \
+                 if dev[0].startswith("00:1") and dev[1].find("Nintendo") != -1 ]
                 
-    return wm
 

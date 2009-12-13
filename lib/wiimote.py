@@ -1,7 +1,7 @@
 import threading
 import time
 import logging
-from bluetooth.bluez import BluetoothSocket, BluetoothError, L2CAP
+
 from config import SOCK_TIMEOUT_DURATION
 
 import lib.modules.buttons as buttons
@@ -13,14 +13,24 @@ logging.basicConfig()
 logger = logging.getLogger("Wiimote.core")
 logger.setLevel(logging.DEBUG)
 
+try:
+    from bluetooth.bluez import BluetoothSocket
+    from bluetooth.bluez import BluetoothError
+    from bluetooth.bluez import L2CAP
+except ImportError:
+    logger.critical ("No Pybluez module found.")
+    logger.critical ("Please install latest PyBluez lib (https://code.google.com/p/pybluez/)")
+    exit(1)
+
+
 DISCONNECTED = 0x0
 CONNECTED    = 0x1
-STATUS = {
+STATUS       = {
     DISCONNECTED : "Disconnected",
     CONNECTED : "Connected",
     }
-MODE_STATUS = 0x20
-MODE_BUTTON = 0x30
+MODE_STATUS  = 0x20
+MODE_BUTTON  = 0x30
 MODE_BUTTON_ACCELEROMETER = MODE_BUTTON | 0x1
 
 class Wiimote(threading.Thread):
