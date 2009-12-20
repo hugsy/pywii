@@ -4,6 +4,7 @@ cfg = ConfigParser.ConfigParser()
 cfg.read('config.ini')
 
 DEBUG = cfg.get("main", "DEBUG")
+DEBUG_LEVEL = cfg.get("main", "DEBUG_LEVEL")
 SLEEP_DURATION = int(cfg.get("main", "SLEEP_DURATION"))
 DISCOVER_DURATION = int(cfg.get("main", "DISCOVER_DURATION"))
 SOCK_TIMEOUT_DURATION = float(cfg.get("main", "SOCK_TIMEOUT_DURATION"))

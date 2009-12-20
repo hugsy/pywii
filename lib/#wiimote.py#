@@ -13,7 +13,6 @@ from lib.modules.speaker import Speaker
 logging.basicConfig()
 logger = logging.getLogger("Wiimote.core")
 logger.setLevel(DEBUG_LEVEL)
-print DEBUG_LEVEL
 
 try:
     from bluetooth.bluez import BluetoothSocket
