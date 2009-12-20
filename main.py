@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # $ File: /home/chris/code/pywii/main.py $
-# $ MD5: 7fc0955fb4163304155c0c3ccb12908c $
+# $ MD5: c6cda562a1a794bf15f4df08ea1f8aae $
 # $ By Chris A <tuxxychris[at]gmail[dot]com> $ 
-# $ Last-Modified: Sun Dec 13 16:50:26 2009 $ 
+# $ Last-Modified: Sun Dec 20 13:16:18 2009 $ 
 
 __author__  = "hugsy"
-__version__ = 0.2
-__licence__ = "WTFPL v.2"
-__file__    = "/home/chris/code/pywii/pywii.py"
+__version__ = 0.1
+__licence__ = "GPL v.2"
+__file__    = "pywii.py"
 __doc__     = """ 
 
 This simple tool was basically written because I'm lazy,
@@ -31,6 +31,10 @@ Yet-to-come features :
 
 All suggestions welcomed at tuxxychris at gmail dot com 
 
+The only pre-requisite for PyWii to work is the PyBluez library, available at
+https://code.google.com/pybluez.
+
+Enjoy 
 """ 
 
 from config import SLEEP_DURATION
