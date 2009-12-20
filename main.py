@@ -33,7 +33,7 @@ All suggestions welcomed at tuxxychris at gmail dot com
 
 """ 
 
-from config import DEBUG, SLEEP_DURATION
+from config import SLEEP_DURATION
 from lib.wiimote import Wiimote
 from lib.base import find_wiimotes
 from time import sleep

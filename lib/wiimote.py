@@ -14,6 +14,7 @@ logging.basicConfig()
 logger = logging.getLogger("Wiimote.core")
 logger.setLevel(DEBUG_LEVEL)
 
+
 try:
     from bluetooth.bluez import BluetoothSocket
     from bluetooth.bluez import BluetoothError
@@ -24,8 +25,8 @@ except ImportError:
     exit(1)
 
 
-DISCONNECTED = 0x0
-CONNECTED    = 0x1
+DISCONNECTED = 0x00
+CONNECTED    = 0x01
 STATUS       = {
     DISCONNECTED : "Disconnected",
     CONNECTED    : "Connected",
@@ -51,7 +52,7 @@ class Wiimote(threading.Thread):
     - Rumble activation
 
     Yet to come :
-    - Speaker usage
+    - Speaker usage (not stable for now)
     - Infra-red camera interaction
     """
 
