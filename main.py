@@ -33,32 +33,39 @@ All suggestions welcomed at tuxxychris at gmail dot com
 
 """ 
 
-from config import DEBUG
+from config import DEBUG, SLEEP_DURATION
 from lib.wiimote import Wiimote
 from lib.base import find_wiimotes
+from time import sleep
 
 if __name__ == "__main__":
-    # wiimote_addrs = [('00:19:1D:B7:43:0D', 'Nintendo RVL-CNT-01')]
-    wiimote_addrs = find_wiimotes()
-
-    if len(wiimote_addrs) == 0 :
-        print ("No Wiimote found")
-        exit (128)
-    elif len(wiimote_addrs) > 4 :
-        print ("Cannot handle more than 4 Wiimotes for the moment")
-        
-    wii_num = 1
+    # wiimotes = [('00:19:1D:B7:43:0D', 'Nintendo RVL-CNT-01')] # for debug 
+    wiimotes = []
+    attempts = 5
     wiimote_threads = []
     
-    for wm in wiimote_addrs:
-        print ("Creating Wiimote-%d" % wii_num)
-        wiimote = Wiimote(str(wm[0]), str(wm[1]), wii_num)
+    while attempts :
+        wiimotes = find_wiimotes()
+        attempts -= 1
+        if len(wiimotes) :
+            break
+        else :
+            sleep (SLEEP_DURATION)
+
+    if len(wiimotes) == 0 :
+        print ("No Wiimote found")
+        exit (128)
+    elif len(wiimotes) > 4 :
+        print ("Cannot handle more than 4 Wiimotes for the moment")
+        wiimotes = wiimotes[0:4]
+
+    idx = 1
+    for wm in wiimotes:
+        wiimote = Wiimote(str(wm[0]), str(wm[1]), idx)
         wiimote.start()
         wiimote_threads.append(wiimote)
+        idx += 1
         
-        wii_num += 1
-        if wii_num > 4 : break
-
     for wm in wiimote_threads :
         wm.join()
     

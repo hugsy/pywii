@@ -9,7 +9,7 @@ def find_bluetooth_devices():
     devices = []
     print ("Looking for Bluetooth device for %d seconds" % DISCOVER_DURATION)
     try :
-        devices = discover_devices(duration=5,
+        devices = discover_devices(duration=DISCOVER_DURATION,
                                    lookup_names=True)
     except BluetoothError, be:
         print ("%s" % str(be))

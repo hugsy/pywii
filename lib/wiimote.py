@@ -28,7 +28,7 @@ DISCONNECTED = 0x0
 CONNECTED    = 0x1
 STATUS       = {
     DISCONNECTED : "Disconnected",
-    CONNECTED : "Connected",
+    CONNECTED    : "Connected",
     }
 MODE_STATUS  = 0x20
 MODE_BUTTON  = 0x30
@@ -78,7 +78,7 @@ class Wiimote(threading.Thread):
         self.z              = 0
 
         # speaker implementation
-        self.speaker    = Speaker(self)
+        # self.speaker    = Speaker(self)
         
 
     def __repr__(self):
@@ -298,7 +298,7 @@ class Wiimote(threading.Thread):
             if k == "Battery" : v = "%d" % stats[k]
             elif stats[k] : v = "On"
             else : v = "Off"
-            status += "%s : %s\n" % (k,v)
+            status += "%16s : %10s\n" % (k,v)
         
         print (status)
 
