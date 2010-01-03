@@ -38,7 +38,7 @@ Enjoy
 """ 
 
 from server import Server, Daemon
-from config import daemon
+from config import DAEMONIZE
 
 
 if __name__ == "__main__":

@@ -8,50 +8,63 @@ import sys, os
 class Server :
 
     def __init__(self):
-        # self.wiimotes = [('00:19:1D:B7:43:0D', 'Nintendo RVL-CNT-01')] # for debug 
-        self.wiimotes = []
         self.clients = []        
         self.wiimote_threads = []
-
-        self.clients = self.listen_for_connections()
-        self.wiimotes = self.listen_for_wiimotes()
-
-        self.proceed()
+        self.nb_wiimote = 0
         
+        self.listen_for_connections()
+        self.listen_for_wiimotes()
 
+        self.stop_all()
+
+        
+    def listen_for_connections (self):
+        """
+        Listen for clients connection on 4321/TCP 
+        """
+        pass
+
+    
     def listen_for_wiimotes(self):
-        wiimotes = []
+        """
+        Listen for new wiimotes
+        """
         attempts = 5 # for inifinite loop, set this to True
         
         while attempts :
-            wiimotes = find_wiimotes()
+            new_wiimotes = []
+            new_wiimotes = find_wiimotes()
+            
+            for new_wiimote in new_wiimotes :
+                self.start(new_wiimote)
+                
             attempts -= 1
-            if len (wiimotes) :
+            if len (new_wiimotes) :
                 break
             else :
-                sleep (SLEEP_DURATION)
-
-        return wiimotes
+                sleep(SLEEP_DURATION)
 
     
-    def proceed(self):
+    def start(self, wm):
+        if self.nb_wiimote > 4 :
+            print ("Cannot handle more than 4 Wiimotes.")
+            return
 
-        if len(self.wiimotes) == 0 :
-            print ("No Wiimote found")
-            exit (128)
-        elif len(self.wiimotes) > 4 :
-            print ("Cannot handle more than 4 Wiimotes. Truncating to 4 first entries")
-            self.wiimotes = self.wiimotes[0:4]
+        self.nb_wiimote += 1
+        wiimote = Wiimote(str(wm[0]), str(wm[1]), self.nb_wiimote)
+        wiimote.start()
+        self.wiimote_threads.append(wiimote)      
+                
+
+    def stop(self, wiimote):
+        wiimote.join()
         
-        idx = 1
-        for wm in wiimotes:
-            wiimote = Wiimote(str(wm[0]), str(wm[1]), idx)
-            wiimote.start()
-            self.wiimote_threads.append(wiimote)
-            idx += 1
         
+    def stop_all(self):
         for wm in self.wiimote_threads :
-            wm.join()
+            self.stop(wm)
+    
+        
 
 
             

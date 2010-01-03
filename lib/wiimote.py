@@ -117,8 +117,16 @@ class Wiimote(threading.Thread):
 
             # module activation & test
             rumble.setTimeRumble(self, 1) # activates 1 sec rumbling
-            led.blink(self, 1, 1) # blinks 1 time of 1 second each
-        
+
+            # those loops are just for fun, small led animation
+            for i in range(1,5):
+                led.blink(wiimote=self, length=0.5, repeat=1, diod=i)
+            for i in range(self.number,5).reverse:
+                led.blink(wiimote=self, length=0.3, repeat=1, diod=i)
+
+            # turn on led matching the wiimote number
+            led.switchLed(wiimote=self, diod=self.number)
+            
             # listen for data
             self.read()
 
