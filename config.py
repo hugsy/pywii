@@ -8,7 +8,9 @@ DEBUG_LEVEL             = cfg.getint("main", "DEBUG_LEVEL")
 SLEEP_DURATION          = cfg.getint("main", "SLEEP_DURATION")
 DISCOVER_DURATION       = cfg.getint("main", "DISCOVER_DURATION")
 SOCK_TIMEOUT_DURATION   = cfg.getfloat("main", "SOCK_TIMEOUT_DURATION")
+DAEMONIZE               = cfg.getboolean("main", "DAEMONIZE")
 
+# buttons configuration
 BUTTON_NULL             = 0x00
 BUTTON_A                = 0x01
 BUTTON_B                = 0x02
@@ -33,6 +35,7 @@ BUTTON_ACTION = {
     BUTTON_B      : cfg.get("button_action", "BUTTON_ACTION_B"),
     }
 
+# accelerometer configuration
 ACCELEROMETER_ZERO       = cfg.getint("accel_config", "ACCELEROMETER_ZERO")
 ACCELEROMETER_PRECISION  = cfg.getint("accel_config", "ACCELEROMETER_PRECISION")
 
