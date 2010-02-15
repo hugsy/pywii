@@ -6,13 +6,22 @@ import sys, os
 
 
 class Server :
+    """
+    Server class for wiimote administration
+    """
 
+    PORT = 4321
+    HOST = ''
+    
     def __init__(self):
         self.clients = []        
         self.wiimote_threads = []
         self.nb_wiimote = 0
-        
-        self.listen_for_connections()
+
+        # listen for client connection
+        # self.listen_for_connections()
+
+        # listen for wiimote
         self.listen_for_wiimotes()
 
         self.stop_all()
@@ -22,7 +31,29 @@ class Server :
         """
         Listen for clients connection on 4321/TCP 
         """
-        pass
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        except socket.error, msg:
+            sys.stderr.write (msg)
+            s = None
+            exit(1)
+
+        try:
+            s.bind((HOST, PORT))
+            s.listen(1)
+            if s is None: raise socket.error("Socket is None")
+        except socket.error, msg:
+            sys.stderr.write(msg)
+            s.close()
+            s = None
+            exit(1)
+
+        while True:
+            rdy_r, rdy_w, rdy_x = select([s], [], [])
+
+            if s in rdy_r:
+                conn, addr = s.accept()
+                # too late to continue ...
 
     
     def listen_for_wiimotes(self):
@@ -45,26 +76,34 @@ class Server :
                 sleep(SLEEP_DURATION)
 
     
-    def start(self, wm):
+    def start(self, wiimote):
+        """
+        Start wiimote
+        """
         if self.nb_wiimote > 4 :
             print ("Cannot handle more than 4 Wiimotes.")
             return
 
         self.nb_wiimote += 1
-        wiimote = Wiimote(str(wm[0]), str(wm[1]), self.nb_wiimote)
-        wiimote.start()
-        self.wiimote_threads.append(wiimote)      
+        wiimote_o = Wiimote(str(wiimote[0]), str(wiimote[1]), self.nb_wiimote)
+        wiimote_o.start()
+        self.wiimote_threads.append(wiimote_o)
                 
 
     def stop(self, wiimote):
+        """
+        Stop wiimote
+        """
         wiimote.join()
         
         
     def stop_all(self):
+        """
+        Stop all wiimotes
+        """
         for wm in self.wiimote_threads :
             self.stop(wm)
     
-        
 
 
             
@@ -83,20 +122,21 @@ class Daemon :
         self.instance = instance
         instance.run()
 
+        
     def fork(self):
         """
         Fork procedure
         """
         try:
             pid = os.fork() 
-            if pid > 0 :
-                exit(0)
+            if pid > 0 : exit(0)
         except OSError, e: 
             sys.stderr.write("Fork failed (%d) %s\n" % (e.errno, e.strerror))
             exit(1)
             
         return pid
 
+    
     def deamonize(self):
         """
         Set the process as a daemon

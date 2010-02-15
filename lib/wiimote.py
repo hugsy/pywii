@@ -1,28 +1,24 @@
 import threading
 import time
 import logging
-
-from config import SOCK_TIMEOUT_DURATION, DEBUG_LEVEL
-
-import lib.modules.buttons as buttons
-import lib.modules.accelerometer as accelerometer
-import lib.modules.led as led
-import lib.modules.rumble as rumble
-from lib.modules.speaker import Speaker
-
-logging.basicConfig()
-logger = logging.getLogger("Wiimote.core")
-logger.setLevel(DEBUG_LEVEL)
-
+import sys
 
 try:
     from bluetooth.bluez import BluetoothSocket
     from bluetooth.bluez import BluetoothError
     from bluetooth.bluez import L2CAP
 except ImportError:
-    logger.critical ("No Pybluez module found.")
-    logger.critical ("Please install latest PyBluez lib (https://code.google.com/p/pybluez/)")
+    sys.stderr.write ("No Pybluez module found.")
+    sys.stderr.write ("Please install latest PyBluez lib (https://code.google.com/p/pybluez/)")
     exit(1)
+
+from config import SOCK_TIMEOUT_DURATION, DEBUG_LEVEL
+import lib.modules.buttons as buttons
+import lib.modules.accelerometer as accelerometer
+import lib.modules.led as led
+# import lib.modules.rumble as rumble
+from lib.modules.speaker import Speaker
+from lib.modules.rumble import Rumble
 
 
 DISCONNECTED = 0x00
@@ -58,8 +54,16 @@ class Wiimote(threading.Thread):
 
     def __init__ (self, mac, name, number):
         threading.Thread.__init__(self)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Creating a new wiimote thread")
+
+        # logging everything
+        logging.basicConfig()
+        self.logger = logging.getLogger("Wiimote.core")
+        self.logger.setLevel(DEBUG_LEVEL)
+
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("Creating a new wiimote thread")
+
+        # checking wiimote pre-requisite
 
         # wiimote attributes
         self.mac             = mac
@@ -78,9 +82,12 @@ class Wiimote(threading.Thread):
         self.y              = 0
         self.z              = 0
 
+        # rumble implementation
+        self.rumble     = None
+
         # speaker implementation
-        # self.speaker    = Speaker(self)
-        
+        self.speaker    = None
+
 
     def __repr__(self):
         desc  = "Description of Wiimote-%d: \n" % self.number
@@ -101,31 +108,41 @@ class Wiimote(threading.Thread):
         this function establishes a BT connection and if succeeded,
         starts reading data.
         """
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.info("Starting %s" % str(self))
+
+        try_left = 5
+        
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.info("Starting %s" % str(self))
 
         while True :
             (self.receive_socket, self.control_socket) = self.connect()
-            if self.receive_socket is None or self.control_socket is None : 
-                logger.critical("Failed to establish connection")
+            if self.receive_socket is None or self.control_socket is None :
+                try_left -= 1
+                if not try_left :
+                    return
+
+                self.logger.critical("Failed to establish connection")
                 self.set_state(DISCONNECTED)
-                logger.info("Retrying in 5 seconds")
+                self.logger.info("Retrying in 5 seconds")
                 time.sleep(5)
                 continue
 
+            # here, we have established link 
             self.set_state(CONNECTED)
 
             # module activation & test
-            rumble.setTimeRumble(self, 1) # activates 1 sec rumbling
+            self.rumble = Rumble(self)
+            self.rumble.setTimeRumble(1) # activates 1 sec rumbling
 
             # those loops are just for fun, small led animation
             for i in range(1,5):
-                led.blink(wiimote=self, length=0.5, repeat=1, diod=i)
-            for i in range(self.number,5).reverse:
                 led.blink(wiimote=self, length=0.3, repeat=1, diod=i)
 
             # turn on led matching the wiimote number
             led.switchLed(wiimote=self, diod=self.number)
+
+            # speaker implementation
+            # self.speaker    = Speaker(self)
             
             # listen for data
             self.read()
@@ -138,7 +155,7 @@ class Wiimote(threading.Thread):
     def set_state (self, newState):
         if newState != self.state:
             self.state = newState
-            logger.info("Change status to: %s" % STATUS[self.state])
+            self.logger.info("Change status to: %s" % STATUS[self.state])
 
             
     def get_state(self):
@@ -158,7 +175,7 @@ class Wiimote(threading.Thread):
             r_sock.connect((self.mac, 0x13)) # 0x13 : reception channel
             r_sock.settimeout(SOCK_TIMEOUT_DURATION)
         except BluetoothError, be:
-            logger.error("Failed connecting: %s" % be)
+            self.logger.error("Failed connecting: %s" % be)
             c_sock.close()
             r_sock.close()
             c_sock = None 
@@ -174,7 +191,7 @@ class Wiimote(threading.Thread):
         self.receive_socket.close()
         self.control_socket.close()
         self.set_state(DISCONNECTED) 
-        logger.info('Gracefully disconnected')
+        self.logger.info('Gracefully disconnected')
 
         
     def read(self):
@@ -195,8 +212,8 @@ class Wiimote(threading.Thread):
                     continue
 
                 # this hack below is just for debug
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Frame received: %s' % [ '0x%x' % x for x in frame ] )
+                if self.logger.isEnabledFor(logging.DEBUG):
+                    self.logger.debug('Frame received: %s' % [ '0x%x' % x for x in frame ] )
 
                 # we need to convert those bytes into readable data
                 self.parse (frame)
@@ -228,15 +245,17 @@ class Wiimote(threading.Thread):
         if bytes[1] == MODE_BUTTON_ACCELEROMETER :
             accelerometer.update(acceler_bytes)
 
+            
     def send(self, frame):
         """
         Only send the frame over the signalisation channel
         """
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Frame sent: %s' % [ '0x%x' % ord(x) for x in frame ]) 
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug('Frame sent: %s' % [ '0x%x' % ord(x) for x in frame ]) 
         
         frame = ''.join(frame)
         self.control_socket.send(frame)
+
         
     def send_control_frame(self, bytes):
         """
@@ -246,25 +265,26 @@ class Wiimote(threading.Thread):
         bytes.insert(0, chr(0x52))
         self.send(bytes)
 
+        
     def change_feature(self, mode):
         """
         Allows to change the Wiimote features.
-        Currently implemented supported: led, rumble.
         """
         # change feature frame starts with 0x52 0x11
-        logger.info("Switching feature to 0x%x" % mode)
+        self.logger.info("Switching feature to 0x%x" % mode)
         features_code = chr(0x11)
         mode_code = chr(mode)
         bytes = [features_code, mode_code]
         self.send_control_frame(bytes)
 
+        
     def change_mode(self, mode, persist_data=False):
         """
         Allows to change mode:
         2 modes for now : buttons (default) / accelerometer
         """
         # change mode frame start with 0x52 0x12
-        logger.info("Switching mode to 0x%x" % mode)
+        self.logger.info("Switching mode to 0x%x" % mode)
         mode_byte = chr(0x12)
 
         if persist_data :
@@ -276,6 +296,7 @@ class Wiimote(threading.Thread):
         bytes = [mode_byte, byte_mode_1, byte_mode_2]
         self.send_control_frame(bytes)
 
+        
     def request_status(self):
         """
         Request Wiimote status (battery level, connected extensions,
@@ -285,6 +306,7 @@ class Wiimote(threading.Thread):
         statusFrame = [chr(0x15), chr(0x00)]
         self.send_control_frame(statusFrame)
 
+        
     def print_status(self, report):
         """
         Display Wiimote status.
@@ -320,8 +342,8 @@ class Wiimote(threading.Thread):
         bytes.append(chr(len(data_bytes)))
         bytes += [ chr(x) for x in data_bytes ]
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Write %s at %s" % (data_bytes, address_bytes))
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("Write %s at %s" % (data_bytes, address_bytes))
         
         self.send_control_frame(bytes)
         

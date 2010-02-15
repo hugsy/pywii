@@ -1,14 +1,16 @@
+"""Configuration parser"""
+
 import ConfigParser
 
-cfg = ConfigParser.ConfigParser()
-cfg.read('config.ini')
+CFG = ConfigParser.ConfigParser()
+CFG.read('config.ini')
 
-DEBUG                   = cfg.getboolean("main", "DEBUG")
-DEBUG_LEVEL             = cfg.getint("main", "DEBUG_LEVEL")
-SLEEP_DURATION          = cfg.getint("main", "SLEEP_DURATION")
-DISCOVER_DURATION       = cfg.getint("main", "DISCOVER_DURATION")
-SOCK_TIMEOUT_DURATION   = cfg.getfloat("main", "SOCK_TIMEOUT_DURATION")
-DAEMONIZE               = cfg.getboolean("main", "DAEMONIZE")
+DEBUG                   = CFG.getboolean("main", "DEBUG")
+DEBUG_LEVEL             = CFG.getint("main", "DEBUG_LEVEL")
+SLEEP_DURATION          = CFG.getint("main", "SLEEP_DURATION")
+DISCOVER_DURATION       = CFG.getint("main", "DISCOVER_DURATION")
+SOCK_TIMEOUT_DURATION   = CFG.getfloat("main", "SOCK_TIMEOUT_DURATION")
+DAEMONIZE               = CFG.getboolean("main", "DAEMONIZE")
 
 # buttons configuration
 BUTTON_NULL             = 0x00
@@ -25,26 +27,26 @@ BUTTON_1                = 0x10
 BUTTON_2                = 0x11
 
 BUTTON_ACTION = {
-    BUTTON_LEFT   : cfg.get("button_action", "BUTTON_ACTION_LEFT"),
-    BUTTON_RIGHT  : cfg.get("button_action", "BUTTON_ACTION_RIGHT"),
-    BUTTON_UP     : cfg.get("button_action", "BUTTON_ACTION_UP"),
-    BUTTON_DOWN   : cfg.get("button_action", "BUTTON_ACTION_DOWN"),
-    BUTTON_PLUS   : cfg.get("button_action", "BUTTON_ACTION_PLUS"),
-    BUTTON_MINUS  : cfg.get("button_action", "BUTTON_ACTION_MINUS"),
-    BUTTON_A      : cfg.get("button_action", "BUTTON_ACTION_A"),
-    BUTTON_B      : cfg.get("button_action", "BUTTON_ACTION_B"),
+    BUTTON_LEFT   : CFG.get("button_action", "BUTTON_ACTION_LEFT"),
+    BUTTON_RIGHT  : CFG.get("button_action", "BUTTON_ACTION_RIGHT"),
+    BUTTON_UP     : CFG.get("button_action", "BUTTON_ACTION_UP"),
+    BUTTON_DOWN   : CFG.get("button_action", "BUTTON_ACTION_DOWN"),
+    BUTTON_PLUS   : CFG.get("button_action", "BUTTON_ACTION_PLUS"),
+    BUTTON_MINUS  : CFG.get("button_action", "BUTTON_ACTION_MINUS"),
+    BUTTON_A      : CFG.get("button_action", "BUTTON_ACTION_A"),
+    BUTTON_B      : CFG.get("button_action", "BUTTON_ACTION_B"),
     }
 
 # accelerometer configuration
-ACCELEROMETER_ZERO       = cfg.getint("accel_config", "ACCELEROMETER_ZERO")
-ACCELEROMETER_PRECISION  = cfg.getint("accel_config", "ACCELEROMETER_PRECISION")
+ACCELEROMETER_ZERO       = CFG.getint("accel_config", "ACCELEROMETER_ZERO")
+ACCELEROMETER_PRECISION  = CFG.getint("accel_config", "ACCELEROMETER_PRECISION")
 
 ACCEL_ACTION = {
-    "left"    : cfg.get("accel_action", "ACCEL_X_LEFT_ACTION"),
-    "right"   : cfg.get("accel_action", "ACCEL_X_RIGHT_ACTION"),
-    "up"      : cfg.get("accel_action", "ACCEL_Y_UP_ACTION"),
-    "down"    : cfg.get("accel_action", "ACCEL_Y_DOWN_ACTION"),
-    "front"   : cfg.get("accel_action", "ACCEL_Z_FRONT_ACTION"),
-    "back"    : cfg.get("accel_action", "ACCEL_Z_BACK_ACTION"),
+    "left"    : CFG.get("accel_action", "ACCEL_X_LEFT_ACTION"),
+    "right"   : CFG.get("accel_action", "ACCEL_X_RIGHT_ACTION"),
+    "up"      : CFG.get("accel_action", "ACCEL_Y_UP_ACTION"),
+    "down"    : CFG.get("accel_action", "ACCEL_Y_DOWN_ACTION"),
+    "front"   : CFG.get("accel_action", "ACCEL_Z_FRONT_ACTION"),
+    "back"    : CFG.get("accel_action", "ACCEL_Z_BACK_ACTION"),
     }
 

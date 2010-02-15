@@ -1,0 +1,5 @@
+TODO list:
+
+- client / serveur architecture et daemonize le serveur
+- intégrer un système de validation (tests/* )à chaque commit
+- mettre chaque module dans des classes

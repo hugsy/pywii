@@ -1,30 +1,35 @@
-"""
-
-This module handles the rumble on the Wiimote
-
-"""
-
 import time
 
-def switchRumble(wiimote):
+class Rumble :
     """
-    Switch the rumble.
-    """
-    rumble_flag = 1 << 0
     
-    if wiimote.feature & rumble_flag :
-        wiimote.feature &= ~rumble_flag
-    else:
-        wiimote.feature |= rumble_flag
+    This module handles the rumble on the Wiimote
+    
+    """
+
+    def __init__(self, wiimote):
+        self.wiimote = wiimote
+
         
-    wiimote.change_feature(wiimote.feature)
+    def switchRumble(self):
+        """
+        Switch the rumble.
+        """
+        rumble_flag = 1 << 0
+    
+        if self.wiimote.feature & rumble_flag :
+            self.wiimote.feature &= ~rumble_flag
+        else:
+            self.wiimote.feature |= rumble_flag
+        
+        self.wiimote.change_feature(self.wiimote.feature)
 
-
-def setTimeRumble(wiimote, dur):
-    """
-    Activate the rumbe for dur seconds then shut it down.
-    """
-    switchRumble(wiimote)
-    time.sleep(dur)
-    switchRumble(wiimote)
+        
+    def setTimeRumble(dur):
+        """
+        Activate the rumbe for dur seconds then shut it down.
+        """
+        self.switchRumble(self.wiimote)
+        time.sleep(dur)
+        self.switchRumble(self.wiimote)
 
