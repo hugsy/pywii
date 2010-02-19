@@ -2,8 +2,10 @@ import threading
 import time
 import logging
 import sys
+import os
 
 try:
+    # PyBluez is required
     from bluetooth.bluez import BluetoothSocket
     from bluetooth.bluez import BluetoothError
     from bluetooth.bluez import L2CAP
@@ -12,11 +14,10 @@ except ImportError:
     sys.stderr.write ("Please install latest PyBluez lib (https://code.google.com/p/pybluez/)")
     exit(1)
 
-from config import SOCK_TIMEOUT_DURATION, DEBUG_LEVEL
+from config import SOCK_TIMEOUT_DURATION, DEBUG_LEVEL, ON_EXIT_HOOK
 import lib.modules.buttons as buttons
 import lib.modules.accelerometer as accelerometer
 import lib.modules.led as led
-# import lib.modules.rumble as rumble
 from lib.modules.speaker import Speaker
 from lib.modules.rumble import Rumble
 
@@ -39,7 +40,7 @@ class Wiimote(threading.Thread):
     - if succeeded, runs a loop to read data unless user asks for
     disconnection
 
-    Features that have been added to handle :
+    Features currently working : 
     - wiimote buttons, which integrated since 0.2. Button actions 
     must be specified in the configuration file
     - accelerometer, with the possibility to perform actions upon
@@ -47,8 +48,10 @@ class Wiimote(threading.Thread):
     - LED activation
     - Rumble activation
 
-    Yet to come :
+    Working on :
     - Speaker usage (not stable for now)
+    
+    Yet to come :
     - Infra-red camera interaction
     """
 
@@ -62,8 +65,6 @@ class Wiimote(threading.Thread):
 
         if self.logger.isEnabledFor(logging.DEBUG):
             self.logger.debug("Creating a new wiimote thread")
-
-        # checking wiimote pre-requisite
 
         # wiimote attributes
         self.mac             = mac
@@ -148,9 +149,15 @@ class Wiimote(threading.Thread):
             self.read()
 
             # if asked to close connection
+            self.close()
+            
             if self.get_state() == DISCONNECTED :
-                return 
+                break
 
+        if ON_EXIT_HOOK is not None and ON_EXIT_HOOK != "":
+            os.system(ON_EXIT_HOOK)
+
+        return
             
     def set_state (self, newState):
         if newState != self.state:

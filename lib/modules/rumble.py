@@ -25,11 +25,11 @@ class Rumble :
         self.wiimote.change_feature(self.wiimote.feature)
 
         
-    def setTimeRumble(dur):
+    def setTimeRumble(self, dur):
         """
         Activate the rumbe for dur seconds then shut it down.
         """
-        self.switchRumble(self.wiimote)
+        self.switchRumble()
         time.sleep(dur)
-        self.switchRumble(self.wiimote)
+        self.switchRumble()
 

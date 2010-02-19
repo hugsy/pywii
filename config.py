@@ -12,6 +12,8 @@ DISCOVER_DURATION       = CFG.getint("main", "DISCOVER_DURATION")
 SOCK_TIMEOUT_DURATION   = CFG.getfloat("main", "SOCK_TIMEOUT_DURATION")
 DAEMONIZE               = CFG.getboolean("main", "DAEMONIZE")
 
+ON_EXIT_HOOK             = CFG.get("main", "ON_EXIT_HOOK")
+
 # buttons configuration
 BUTTON_NULL             = 0x00
 BUTTON_A                = 0x01
