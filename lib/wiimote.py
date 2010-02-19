@@ -2,7 +2,7 @@ import threading
 import time
 import logging
 import sys
-import os
+import subprocess
 
 try:
     # PyBluez is required
@@ -155,7 +155,7 @@ class Wiimote(threading.Thread):
                 break
 
         if ON_EXIT_HOOK is not None and ON_EXIT_HOOK != "":
-            os.system(ON_EXIT_HOOK)
+            subprocess.Popen([ON_EXIT_HOOK], shell=True)
 
         return
             
