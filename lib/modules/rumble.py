@@ -1,6 +1,7 @@
-import time
+from time import sleep
+from moduleskel import Module 
 
-class Rumble :
+class Rumble (Module) :
     """
     
     This module handles the rumble on the Wiimote
@@ -8,7 +9,7 @@ class Rumble :
     """
 
     def __init__(self, wiimote):
-        self.wiimote = wiimote
+        Module.__init__(self,wiimote)
 
         
     def switchRumble(self):
@@ -30,6 +31,6 @@ class Rumble :
         Activate the rumbe for dur seconds then shut it down.
         """
         self.switchRumble()
-        time.sleep(dur)
+        sleep(dur)
         self.switchRumble()
 

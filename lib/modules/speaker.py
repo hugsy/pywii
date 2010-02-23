@@ -1,6 +1,7 @@
 import logging
+from moduleskel import Module
 
-class Speaker :
+class Speaker (Module) :
     """
     Speaker implementation
     """
@@ -12,9 +13,10 @@ class Speaker :
     
     def __init__(self, wiimote):
         """
-        Initialisation sequence is described at http://wiibrew.org/wiki/Wiimote#Initialization_Sequence
+        Initialisation sequence is described at
+        http://wiibrew.org/wiki/Wiimote#Initialization_Sequence
         """
-        self.wiimote = wiimote
+        Module.__init__(self, wiimote)
         self.flags = 0
 
         # start 7-step initialisation sequence

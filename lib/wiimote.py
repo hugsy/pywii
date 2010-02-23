@@ -17,7 +17,8 @@ except ImportError:
 from config import SOCK_TIMEOUT_DURATION, DEBUG_LEVEL, ON_EXIT_HOOK
 import lib.modules.buttons as buttons
 import lib.modules.accelerometer as accelerometer
-import lib.modules.led as led
+# import lib.modules.led as led
+from lib.modules.led import Led
 from lib.modules.speaker import Speaker
 from lib.modules.rumble import Rumble
 
@@ -83,6 +84,9 @@ class Wiimote(threading.Thread):
         self.y              = 0
         self.z              = 0
 
+        # led implementation
+        self.led        = None
+
         # rumble implementation
         self.rumble     = None
 
@@ -132,15 +136,16 @@ class Wiimote(threading.Thread):
             self.set_state(CONNECTED)
 
             # module activation & test
+            self.led = Led(self)
             self.rumble = Rumble(self)
             self.rumble.setTimeRumble(1) # activates 1 sec rumbling
 
             # those loops are just for fun, small led animation
             for i in range(1,5):
-                led.blink(wiimote=self, length=0.3, repeat=1, diod=i)
+                self.led.blink(length=0.3, repeat=1, diod=i)
 
             # turn on led matching the wiimote number
-            led.switchLed(wiimote=self, diod=self.number)
+            self.led.switchLed(diod=self.number)
 
             # speaker implementation
             # self.speaker    = Speaker(self)
