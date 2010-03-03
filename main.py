@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # $ File: /home/chris/code/pywii/main.py $
-# $ MD5: c6cda562a1a794bf15f4df08ea1f8aae $
-# $ By Chris A <tuxxychris[at]gmail[dot]com> $ 
-# $ Last-Modified: Sun Dec 20 13:16:18 2009 $ 
+# $ MD5: 5a6883e3e7be46a14f5d081512839f82 $
+# $ By hugsy <hugsy __at__ pyc __dot__ li> $ 
+# $ Last-Modified: Sat Feb 27 18:21:48 2010 $
 
 __author__  = "hugsy"
 __version__ = 0.1
@@ -43,10 +43,9 @@ from config import DAEMONIZE
 
 if __name__ == "__main__":
 
+    pywii = Server()
     
     if DAEMONIZE :
-        Daemon(Server())
-    else :
-        Server()
+        Daemon(pywii)
         
     exit (0)

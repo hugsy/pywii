@@ -7,79 +7,43 @@ import sys, os
 
 class Server :
     """
-    Server class for wiimote administration
+    PyWii is nothing less than a server that will listen for Wiimote
+    actions and responds with system actions    
     """
 
-    PORT = 4321
-    HOST = ''
     
     def __init__(self):
-        self.clients = []        
-        self.wiimote_threads = []
-        self.nb_wiimote = 0
-
-        # listen for client connection
-        # self.listen_for_connections()
-
-        # listen for wiimote
-        self.listen_for_wiimotes()
-
-        self.stop_all()
-
+        """ initializes server """
         
-    def listen_for_connections (self):
-        """
-        Listen for clients connection on 4321/TCP 
-        """
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except socket.error, msg:
-            sys.stderr.write (msg)
-            s = None
-            exit(1)
-
-        try:
-            s.bind((HOST, PORT))
-            s.listen(1)
-            if s is None: raise socket.error("Socket is None")
-        except socket.error, msg:
-            sys.stderr.write(msg)
-            s.close()
-            s = None
-            exit(1)
-
-        while True:
-            rdy_r, rdy_w, rdy_x = select([s], [], [])
-
-            if s in rdy_r:
-                conn, addr = s.accept()
-                # too late to continue ...
+        wiimotes_found = self.listen_for_wiimotes()
+        
+        if not wiimotes_found :
+            return
+            
+        self.nb_wiimote = 0  # nb of running wiimotes
+        self.start_all (wiimotes_found)  # fire up
+        self.stop_all()  # clean and quit properly
 
     
     def listen_for_wiimotes(self):
-        """
-        Listen for new wiimotes
-        """
-        attempts = 5 # for inifinite loop, set this to True
+        """ listen for new wiimotes """
+        
+        attempts = 3 # for inifinite loop, set this to True
+        new_wiimotes = []
         
         while attempts :
-            new_wiimotes = []
             new_wiimotes = find_wiimotes()
-            
-            for new_wiimote in new_wiimotes :
-                self.start(new_wiimote)
-                
-            attempts -= 1
-            if len (new_wiimotes) :
+            if len(new_wiimotes) > 0 :
                 break
             else :
-                sleep(SLEEP_DURATION)
+                attempts -= 1
+            
+        return new_wiimotes
 
     
     def start(self, wiimote):
-        """
-        Start wiimote
-        """
+        """ Start wiimote thread, and add it to the wiimote threads pool"""
+        
         if self.nb_wiimote > 4 :
             print ("Cannot handle more than 4 Wiimotes.")
             return
@@ -88,19 +52,21 @@ class Server :
         wiimote_o = Wiimote(str(wiimote[0]), str(wiimote[1]), self.nb_wiimote)
         wiimote_o.start()
         self.wiimote_threads.append(wiimote_o)
+
+        
+    def start_all(self, wiimotes):
+        """ Starts all wiimotes """
+        for new_wiimote in wiimotes :
+            self.start(new_wiimote)
                 
 
     def stop(self, wiimote):
-        """
-        Stop wiimote
-        """
+        """ Stop wiimote """
         wiimote.join()
         
         
     def stop_all(self):
-        """
-        Stop all wiimotes
-        """
+        """ Stop all wiimotes """
         for wm in self.wiimote_threads :
             self.stop(wm)
     
@@ -109,10 +75,10 @@ class Server :
             
 class Daemon :
     """
-    Daemonize class based on Daemonizer, in Python for Unix Administration, Gift & Noah
+    Daemonize class based on Daemonizer, in Python for Unix Administration,
+    by Gift & Noah
     """
 
-    instance = None
     startmsg = 'started with pid %s'
     
     def __init__(self, instance):
