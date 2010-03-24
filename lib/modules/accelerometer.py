@@ -1,74 +1,64 @@
-"""
+from subprocess import Popen
+from moduleskel import Module
 
-Those functions interprets accelerometer movement. It is a bit fuzzy,
-but is really coherent after a short moment.
-Please see http://wiibrew.org/wiki/Wiimote#Accelerometer for more
-details
 
-"""
-from config import ACCELEROMETER_ZERO, ACCELEROMETER_PRECISION, ACCEL_ACTION
-import logging
-from subprocess import call
-
-logging.basicConfig()
-logger = logging.getLogger("Wiimote.accelerometer")
-logger.setLevel(logging.DEBUG)
-
-def update(bytes):
+class Accelerometer (Module):
     """
-    Extract positions from frame.
+    This class handles all accelerometer movement. It is a bit fuzzy,
+    but is really coherent after a short moment.
+    Please see http://wiibrew.org/wiki/Wiimote#Accelerometer for more
+    details
     """
-    x = bytes[0]
-    y = bytes[1]
-    z = bytes[2]
 
-    update_horizon(x)
-    update_vertical(y)
-    update_depth(z)
-
-
-def perform_action(move):
-    """
-    Execute system call corresponding to movement
-    """
-    if move not in ('up','down','left','right','back','front'):
-        logger.error("Unknown movement %s" % move)
-        return
-    
-    if logger.isEnabledFor(logging.DEBUG) :
-        logger.debug("%s movement detected" % move)
+    def __init__(self, wiimote):
+        """ Starts the module """
+        Module.__init__(self, wiimote)
         
-    call(ACCEL_ACTION[move], shell=True)
+        
+    def update(bytes):
+        """ Extract positions from frame. """
+        x,y,z = bytes[0:3]
+
+        update_horizon(x)
+        update_vertical(y)
+        update_depth(z)
+
+
+    def perform_action(move):
+        """ Execute system call corresponding to movement """
+        if move not in ('up','down','left','right','back','front'):
+            self.wiimote.logger.error("Unknown movement %s" % move)
+            return
+    
+        if self.wiimote.logger.isEnabledFor(logging.DEBUG) :
+            self.wiimote.logger.debug("%s movement detected" % move)
+        
+
+        Popen([self.cfg.ACCEL_ACTION[move]], shell=True)
     
     
-def update_horizon(x_pos):
-    """
-    Detecting horizontal movement
-    """
-    if x_pos < ACCELEROMETER_ZERO - ACCELEROMETER_PRECISION :
-        perform_action('left')
+    def update_horizon(x_pos):
+        """ Detecting horizontal movement """
+        if x_pos < self.wiimote.cfg.ACCELEROMETER_ZERO - self.wiimote.cfg.ACCELEROMETER_PRECISION :
+            perform_action('left')
         
-    if x_pos > ACCELEROMETER_ZERO + ACCELEROMETER_PRECISION :
-        perform_action('right')
+        if x_pos > self.wiimote.cfg.ACCELEROMETER_ZERO + self.wiimote.cfg.ACCELEROMETER_PRECISION :
+            perform_action('right')
 
         
-def update_vertical(y_pos):
-    """
-    Detecting depth movement
-    """
-    if y_pos > ACCELEROMETER_ZERO + ACCELEROMETER_PRECISION :
-        perform_action('front')
+    def update_vertical(y_pos):
+        """ Detecting depth movement """
+        if y_pos > self.wiimote.cfg.self.wiimote.cfg.ACCELEROMETER_ZERO + self.wiimote.cfg.self.wiimote.cfg.ACCELEROMETER_PRECISION :
+            perform_action('front')
         
-    if y_pos < ACCELEROMETER_ZERO - ACCELEROMETER_PRECISION :
-        perform_action('back')
+        if y_pos < self.wiimote.cfg.ACCELEROMETER_ZERO - self.wiimote.cfg.ACCELEROMETER_PRECISION :
+            perform_action('back')
 
             
-def update_depth(z_pos):
-    """
-    Detecting vertical movement
-    """
-    if z_pos < ACCELEROMETER_ZERO - ACCELEROMETER_PRECISION :
-        perform_action('up')
+    def update_depth(z_pos):
+        """ Detecting vertical movement """
+        if z_pos < self.wiimote.cfg.ACCELEROMETER_ZERO - self.wiimote.cfg.ACCELEROMETER_PRECISION :
+            perform_action('up')
         
-    if z_pos > ACCELEROMETER_ZERO + ACCELEROMETER_PRECISION :
-        perform_action('down')
+        if z_pos > self.wiimote.cfg.ACCELEROMETER_ZERO + self.wiimote.cfg.ACCELEROMETER_PRECISION :
+            perform_action('down')

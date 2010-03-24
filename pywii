@@ -1,0 +1,129 @@
+#!/usr/bin/env python
+# $ File: /home/chris/code/pywii/pywii $
+# $ MD5: 60bd7e6ba8ececb1b06a252a52fef4dc $
+# $ By hugsy <hugsy __at__ pyc __dot__ li> $ 
+# $ Last-Modified: Wed Mar 24 00:37:52 2010 $
+
+__author__  = "hugsy"
+__version__ = 0.1
+__licence__ = "GPL v.2"
+__file__    = "pywii.py"
+__doc__     = """ 
+
+This simple tool was basically written because I'm lazy,
+and is purposed to make a bit of fun with your wiimote
+allowing to interact (simply) with your system. Some events
+(buttons pressing, wiimote moves) can be match to perform a
+specific action on your system.
+
+Up to 4 Wiimotes can be used simultaneously (but I don't see
+the point in that :) ).
+
+Features provided :
+- full button handling (native since v0.1)
+- led handler
+- rumble handler
+- accelerometer handler
+
+Working on :
+- speaker (I'm actually working on it right now)
+
+Yet-to-come features :
+- camera 
+
+All suggestions welcomed at tuxxychris at gmail dot com 
+
+The only pre-requisite for PyWii to work is the PyBluez library, available at
+https://code.google.com/pybluez.
+
+Enjoy 
+""" 
+
+
+from lib.base import find_wiimotes
+from lib.wiimote import Wiimote
+from optparse import OptionParser
+from config import PywiiConfig
+
+
+def listen_for_wiimotes(timeout):
+    """ listen for new wiimotes """
+        
+    attempts = 3 # for inifinite loop, set this to True
+    new_wiimotes = []
+        
+    while attempts :
+        new_wiimotes = find_wiimotes(timeout)
+        if len(new_wiimotes) > 0 :
+            break
+        else :
+            attempts -= 1
+            
+    return new_wiimotes
+
+    
+def start(wiimote, idx, configfile):
+    """ Start wiimote thread, and add it to the wiimote threads pool"""
+
+    if idx > 4 :
+        print ("Cannot handle more than 4 Wiimotes.")
+        return
+    
+    cfg = PywiiConfig(configfile)
+    mac, name = wiimote[0:2]
+    wiimote_o = Wiimote(mac, name, idx, cfg)
+    wiimote_o.start()
+    return wiimote_o
+
+
+        
+def start_all(wiimotes, configfile):
+    """ Starts all wiimotes and returns an array of all started wiimotes """
+    i = 0
+    started = []
+    
+    for new_wiimote in wiimotes :
+        w = start(new_wiimote, i, configfile)
+        if w is not None :
+            i += 1
+            started.append(w)
+
+    return started
+
+
+def stop(wiimote):
+    """ Stop wiimote """
+    wiimote.join()
+        
+        
+def stop_all(wiimotes):
+    """ Stop all wiimotes """
+    for wm in wiimotes :
+        stop(wm)
+
+
+if __name__ == "__main__":
+    usage = "usage: %prog [options] arg"
+    parser = OptionParser(usage)
+    
+    parser.add_option("-f", "--file", dest="filename", default="./pywii.rc",
+                      metavar="/path/to/configfile", type="string",
+                      help="read data from filename [default: %default]")
+
+    parser.add_option("-t", "--timeout", dest="timeout", default=5,
+                      metavar="SECONDS", type="int",
+                      help="Seconds before wiimote search timeouts [default: %default]")
+    
+    (options, args) = parser.parse_args()
+
+    configfile = options.filename
+    timeout    = options.timeout
+    
+    wiimotes_found = listen_for_wiimotes(timeout)
+    if not wiimotes_found :
+        print ("No wiimote found, exiting...")
+        exit(0)
+
+    wiimotes = start_all(wiimotes_found, configfile)
+    stop_all(wiimotes) 
+    exit (0)

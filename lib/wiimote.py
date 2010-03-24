@@ -2,7 +2,7 @@ import threading
 import time
 import logging
 import sys
-import subprocess
+from subprocess import Popen
 
 try:
     # PyBluez is required
@@ -14,13 +14,14 @@ except ImportError:
     sys.stderr.write ("Please install latest PyBluez lib (https://code.google.com/p/pybluez/)")
     exit(1)
 
-from config import SOCK_TIMEOUT_DURATION, DEBUG_LEVEL, ON_EXIT_HOOK
+# from config import SOCK_TIMEOUT_DURATION, DEBUG_LEVEL, ON_EXIT_HOOK
 import lib.modules.buttons as buttons
-import lib.modules.accelerometer as accelerometer
-# import lib.modules.led as led
+# import lib.modules.accelerometer as accelerometer
+
 from lib.modules.led import Led
 from lib.modules.speaker import Speaker
 from lib.modules.rumble import Rumble
+from lib.modules.accelerometer import Accelerometer
 
 
 DISCONNECTED = 0x00
@@ -41,32 +42,24 @@ class Wiimote(threading.Thread):
     - if succeeded, runs a loop to read data unless user asks for
     disconnection
 
-    Features currently working : 
-    - wiimote buttons, which integrated since 0.2. Button actions 
-    must be specified in the configuration file
-    - accelerometer, with the possibility to perform actions upon
-    certains wiimote movements
-    - LED activation
-    - Rumble activation
-
-    Working on :
-    - Speaker usage (not stable for now)
-    
-    Yet to come :
-    - Infra-red camera interaction
+    Can now use modules embedded on the wiimote, such as the rumble, or
+    buttons keymap. More modules are being added.
     """
 
-    def __init__ (self, mac, name, number):
+    def __init__ (self, mac, name, number, cfg):
         threading.Thread.__init__(self)
+
+        self.cfg = cfg
 
         # logging everything
         logging.basicConfig()
         self.logger = logging.getLogger("Wiimote.core")
-        self.logger.setLevel(DEBUG_LEVEL)
+        self.logger.setLevel(self.cfg.DEBUG_LEVEL)
 
         if self.logger.isEnabledFor(logging.DEBUG):
             self.logger.debug("Creating a new wiimote thread")
 
+        
         # wiimote attributes
         self.mac             = mac
         self.name            = name
@@ -80,6 +73,7 @@ class Wiimote(threading.Thread):
         self.feature        = 0x00
 
         # accelerometer information
+        self.accelerometer  = None
         self.x              = 0
         self.y              = 0
         self.z              = 0
@@ -147,6 +141,9 @@ class Wiimote(threading.Thread):
             # turn on led matching the wiimote number
             self.led.switchLed(diod=self.number)
 
+            # activates accelerometer
+            self.accelerometer = Accelerometer(self)
+
             # speaker implementation
             # self.speaker    = Speaker(self)
             
@@ -159,8 +156,8 @@ class Wiimote(threading.Thread):
             if self.get_state() == DISCONNECTED :
                 break
 
-        if ON_EXIT_HOOK is not None and ON_EXIT_HOOK != "":
-            subprocess.Popen([ON_EXIT_HOOK], shell=True)
+        if self.cfg.ON_EXIT_HOOK is not None and self.cfg.ON_EXIT_HOOK != "":
+            Popen([self.cfg.ON_EXIT_HOOK], shell=True)
 
         return
             
@@ -185,7 +182,7 @@ class Wiimote(threading.Thread):
         try :
             c_sock.connect((self.mac, 0x11)) # 0x11 : control channel
             r_sock.connect((self.mac, 0x13)) # 0x13 : reception channel
-            r_sock.settimeout(SOCK_TIMEOUT_DURATION)
+            r_sock.settimeout(self.cfg.SOCK_TIMEOUT_DURATION)
         except BluetoothError, be:
             self.logger.error("Failed connecting: %s" % be)
             c_sock.close()
@@ -255,12 +252,12 @@ class Wiimote(threading.Thread):
             acceler_bytes = bytes[4:7]            
             
         if bytes[1] == MODE_BUTTON_ACCELEROMETER :
-            accelerometer.update(acceler_bytes)
+            self.accelerometer.update(acceler_bytes)
 
             
     def send(self, frame):
         """
-        Only send the frame over the signalisation channel
+        Send a frame on the signalisation channel
         """
         if self.logger.isEnabledFor(logging.DEBUG):
             self.logger.debug('Frame sent: %s' % [ '0x%x' % ord(x) for x in frame ]) 

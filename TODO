@@ -1,7 +1,7 @@
 Still TODO :
 
-- intégrer un système de validation (tests/* )à chaque commit
+- intÃ©grer un systÃ¨me de validation (tests/* )Ã  chaque commit
 - mettre chaque module dans des classes
-- gérer les sessions longue durée (perte de connexion avec la wiimote + pywii
+- gÃ©rer les sessions longue durÃ©e (perte de connexion avec la wiimote + pywii
 en pending)
 - faire de Wiimote() un truc plus modulaire (utilisable dans un ipython par ex)
