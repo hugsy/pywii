@@ -79,7 +79,7 @@ def start(wiimote, idx, configfile):
         
 def start_all(wiimotes, configfile):
     """ Starts all wiimotes and returns an array of all started wiimotes """
-    i = 0
+    i = 1
     started = []
     
     for new_wiimote in wiimotes :

@@ -1,15 +1,5 @@
-# from config import BUTTON_HOME, BUTTON_1, BUTTON_2, \
-    # BUTTON_NULL, BUTTON_UP, BUTTON_DOWN, BUTTON_RIGHT, \
-    # BUTTON_LEFT, BUTTON_PLUS, BUTTON_MINUS, BUTTON_A, BUTTON_B, \
-    # BUTTON_ACTION
-import logging
-from subprocess import call, Popen
+from subprocess import Popen
 from moduleskel import Module
-
-logging.basicConfig()
-logger = logging.getLogger("Wiimote.buttons")
-logger.setLevel(logging.DEBUG)
-
 
 class ButtonsMap (Module):
     """
@@ -28,8 +18,8 @@ class ButtonsMap (Module):
         """ Buttons mapping initialization """ 
         Module.__init__(self,wiimote)
 
-    ######### reprendre ici ##########
-    def execute(byte_value, byte_number, wiimote):
+
+    def execute(self, byte_value, byte_number):
         """
         Executes the corresponding to the button :
         - first looks for the right button code
@@ -45,56 +35,48 @@ class ButtonsMap (Module):
     
         while index < 0x10 :
             # examining each bit of the 2 first bytes
-            button = None
+            action = None
         
             if byte_value & offset :
-                button = get_button(index, byte_number)
+                action = self.get_action(index, byte_number)
 
                 # button treatment
-                # special buttons for management
-                if button == wiimote.cfg.BUTTON_HOME :
-                    wiimote.close()
+                # leave properly
+                if action == "quit":
+                    self.wiimote.close()
 
-                elif button == wiimote.cfg.BUTTON_1 :
+                # toggle accelerometer module
+                elif action == "accel" :
                     accel_flag = 1 << 0
-                    if wiimote.mode & accel_flag :
-                        wiimote.mode &= ~accel_flag
+                    if self.wiimote.mode & accel_flag :
+                        self.wiimote.mode &= ~accel_flag
                     else :
-                        wiimote.mode |= accel_flag
+                        self.wiimote.mode |= accel_flag
 
-                    wiimote.change_mode(wiimote.mode)
+                    self.wiimote.change_mode(self.wiimote.mode)
 
-                elif button == wiimote.cfg.BUTTON_2 :
-                    wiimote.request_status()
+                # print wiimote stats (battery, modules, etc.)
+                elif action == "status" :
+                    self.wiimote.request_status()
                 
-                # if camera mode requested                
-                elif button != wiimote.cfg.BUTTON_NULL :
-                    call(wiimote.cfg.BUTTON_ACTION[button], shell=True)
+                # otherwise, system call
+                elif action is not None and action != 0 :
+                    Popen(action, shell=True)
             
             offset <<= 1
             index += 1
         
 
-    def get_button(idx, byte_num):
+    def get_action(self, idx, byte_num):
         """
-        Match a flag to corresponding button. Makes it human readable.
-        Could be deleted in next versions.
-        See http://wiibrew.org/wiki/Wiimote#Core_Buttons
+        Match a flag to an action specified in the wiimote configuration.
         """
-        values = range(0,8)
-        values[0] = [BUTTON_LEFT, BUTTON_2]
-        values[1] = [BUTTON_RIGHT, BUTTON_1]
-        values[2] = [BUTTON_DOWN, BUTTON_B]
-        values[3] = [BUTTON_UP, BUTTON_A]
-        values[4] = [BUTTON_PLUS, BUTTON_MINUS]
-        values[5] = [BUTTON_NULL, BUTTON_NULL]
-        values[6] = [BUTTON_NULL, BUTTON_NULL]
-        values[7] = [BUTTON_NULL, BUTTON_HOME]
 
         try:
-            ret = values[idx][byte_num]
+            ret = self.wiimote.cfg.keymap[idx][byte_num]
         except Exception , e:
-            ret = BUTTON_NULL
-            logger.error("Exception was raised on values (%d,%d): %s" % (idx,byte_num,e))
+            ret = 0
+            self.wiimote.logger.error("Exception was raised on buttons_map (%d,%d): %s"
+                                      % (idx,byte_num,e))
             
         return ret

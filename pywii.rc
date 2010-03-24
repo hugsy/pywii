@@ -1,19 +1,18 @@
 [main]
-DEBUG : True
 # CRITICAL	50
 # ERROR		40
 # WARNING	30
 # INFO		20
 # DEBUG		10
 # NOTSET	0
-DEBUG_LEVEL : 10
+DEBUG_LEVEL : 30
 DISCOVER_DURATION : 5
 SLEEP_DURATION : 5
 SOCK_TIMEOUT_DURATION : 0.1
 DAEMONIZE: False
 
-# ON_EXIT_HOOK : true
-ON_EXIT_HOOK : "/home/chris/bin/s2ram.sh"
+ON_EXIT_HOOK : true
+# ON_EXIT_HOOK : "/home/chris/bin/s2ram.sh"
 
 
 [button_action]
@@ -35,9 +34,9 @@ ACCELEROMETER_PRECISION : 32
 
 
 [accel_action]
-ACCEL_X_LEFT_ACTION  : true
-ACCEL_X_RIGHT_ACTION : true
-ACCEL_Y_UP_ACTION    : true
-ACCEL_Y_DOWN_ACTION  : true
-ACCEL_Z_FRONT_ACTION : true
-ACCEL_Z_BACK_ACTION  : true
+ACCEL_X_LEFT_ACTION  : echo gauche
+ACCEL_X_RIGHT_ACTION : echo droite
+ACCEL_Y_UP_ACTION    : echo haut
+ACCEL_Y_DOWN_ACTION  : echo bas
+ACCEL_Z_FRONT_ACTION : echo devant
+ACCEL_Z_BACK_ACTION  : echo derriere

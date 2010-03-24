@@ -14,14 +14,12 @@ except ImportError:
     sys.stderr.write ("Please install latest PyBluez lib (https://code.google.com/p/pybluez/)")
     exit(1)
 
-# from config import SOCK_TIMEOUT_DURATION, DEBUG_LEVEL, ON_EXIT_HOOK
-import lib.modules.buttons as buttons
-# import lib.modules.accelerometer as accelerometer
 
-from lib.modules.led import Led
-from lib.modules.speaker import Speaker
-from lib.modules.rumble import Rumble
+from lib.modules.buttons import ButtonsMap
 from lib.modules.accelerometer import Accelerometer
+from lib.modules.led import Led
+from lib.modules.rumble import Rumble
+from lib.modules.speaker import Speaker
 
 
 DISCONNECTED = 0x00
@@ -30,9 +28,11 @@ STATUS       = {
     DISCONNECTED : "Disconnected",
     CONNECTED    : "Connected",
     }
+
 MODE_STATUS  = 0x20
 MODE_BUTTON  = 0x30
-MODE_BUTTON_ACCELEROMETER = MODE_BUTTON | 0x1
+MODE_BUTTON_ACCELEROMETER = 0x31
+
 
 class Wiimote(threading.Thread):
     """
@@ -130,6 +130,7 @@ class Wiimote(threading.Thread):
             self.set_state(CONNECTED)
 
             # module activation & test
+            self.buttons = ButtonsMap(self)
             self.led = Led(self)
             self.rumble = Rumble(self)
             self.rumble.setTimeRumble(1) # activates 1 sec rumbling
@@ -160,7 +161,8 @@ class Wiimote(threading.Thread):
             Popen([self.cfg.ON_EXIT_HOOK], shell=True)
 
         return
-            
+
+    
     def set_state (self, newState):
         if newState != self.state:
             self.state = newState
@@ -244,14 +246,13 @@ class Wiimote(threading.Thread):
         if bytes[1] & MODE_BUTTON:
             buttons_bytes = bytes[2:4]
 
-        for idx in range(2) :
-            buttons.execute(buttons_bytes[idx], idx, self)
+            for idx in xrange(2) :
+                self.buttons.execute(buttons_bytes[idx], idx)
 
-        # accelerometer handling            
-        if bytes[1] & MODE_BUTTON_ACCELEROMETER :
+        # accelerometer handling
+        accel_flag = ~MODE_BUTTON & MODE_BUTTON_ACCELEROMETER
+        if bytes[1] & accel_flag :
             acceler_bytes = bytes[4:7]            
-            
-        if bytes[1] == MODE_BUTTON_ACCELEROMETER :
             self.accelerometer.update(acceler_bytes)
 
             
@@ -329,17 +330,18 @@ class Wiimote(threading.Thread):
             "Extension"    : stats_nibble & 0x02,
             "Speaker"      : stats_nibble & 0x04,
             "Camera"       : stats_nibble & 0x08,
+            "Accelerometer": self.mode,
             }
             
         status = str(self) + "\n"
         
         for k in stats.keys() :
-            if k == "Battery" : v = "%d" % stats[k]
-            elif stats[k] : v = "On"
+            if k == "Battery" : v = "%d%%" % stats[k]
+            elif stats[k] != 0: v = "On"
             else : v = "Off"
             status += "%16s : %10s\n" % (k,v)
         
-        print (status)
+        print ("%s" % status)
 
         
     def write_registers(self, address_bytes, data_bytes):
