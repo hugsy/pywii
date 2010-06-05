@@ -9,34 +9,8 @@ __version__ = 0.1
 __licence__ = "GPL v.2"
 __file__    = "pywii.py"
 __doc__     = """ 
-
-This simple tool was basically written because I'm lazy,
-and is purposed to make a bit of fun with your wiimote
-allowing to interact (simply) with your system. Some events
-(buttons pressing, wiimote moves) can be match to perform a
-specific action on your system.
-
-Up to 4 Wiimotes can be used simultaneously (but I don't see
-the point in that :) ).
-
-Features provided :
-- full button handling (native since v0.1)
-- led handler
-- rumble handler
-- accelerometer handler
-
-Working on :
-- speaker (I'm actually working on it right now)
-
-Yet-to-come features :
-- camera 
-
-All suggestions welcomed at tuxxychris at gmail dot com 
-
-The only pre-requisite for PyWii to work is the PyBluez library, available at
-https://code.google.com/pybluez.
-
-Enjoy 
+pywii helps you to easily create interaction between your wiimote and
+your PC. For the moment, it only works on *nix with python 2.5+
 """ 
 
 

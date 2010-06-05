@@ -1,0 +1,63 @@
+===[ What is it ? ]===
+
+pywii helps you to easily create interaction between your wiimote and
+your PC. For the moment, it only works on *nix with python 2.5+
+
+
+===[ Authors ]===
+
+Christophe Alladoum <hugsy __at__ pyc __dot__ li>
+
+
+===[ Description ]===
+
+This simple tool was basically written because I'm lazy,
+and is purposed to make a bit of fun with your wiimote
+allowing to interact (simply) with your system. Some events
+(buttons pressing, wiimote moves) can be match to perform a
+specific action on your system.
+
+Up to 4 Wiimotes can be used simultaneously (but I don't see
+the point in that :) ).
+
+
+===[ Quick Start ]===
+
+(Check your bluetoothd daemon is active)
+
+$ cd /path/to/pywii/dir
+$ (emacs|vim) pywii.rc  # <- edit your configuration to adapt it to your system
+$ python pywii -f ./pywii.rc
+
+Enjoy
+
+
+===[ Features ]===
+
+Features provided :
+- full button handling (native since v0.1)
+- led handler
+- rumble handler
+- accelerometer handler
+
+
+===[ Pre-requisite ]===
+
+- *nix platform (tested on recent Fedora & Debian)
+- python 2.5+ (http://python.org)
+- PyBluez (https://code.google.com/pybluez)
+
+
+===[ Yet to come ]===
+
+Working on :
+- speaker (I'm actually working on it right now)
+
+Yet-to-come features :
+- camera support
+
+Any suggestion welcomed at hugsy __at__ pyc __ li
+
+
+
+Hope you will like the tool !

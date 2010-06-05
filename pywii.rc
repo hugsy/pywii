@@ -9,10 +9,10 @@ DEBUG_LEVEL : 30
 DISCOVER_DURATION : 5
 SLEEP_DURATION : 5
 SOCK_TIMEOUT_DURATION : 0.1
-DAEMONIZE: False
+# DAEMONIZE: False
 
 ON_EXIT_HOOK : true
-# ON_EXIT_HOOK : "/home/chris/bin/s2ram.sh"
+# ON_EXIT_HOOK : "sudo pm-suspend"
 
 
 [button_action]
