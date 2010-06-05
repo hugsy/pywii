@@ -11,14 +11,13 @@ Christophe Alladoum <hugsy __at__ pyc __dot__ li>
 
 ===[ Description ]===
 
-This simple tool was basically written because I'm lazy,
-and is purposed to make a bit of fun with your wiimote
-allowing to interact (simply) with your system. Some events
-(buttons pressing, wiimote moves) can be match to perform a
+This simple tool was basically written because I'm lazy, and is purposed to make
+a bit of fun with your wiimote allowing to interact (simply) with your
+system. Some events (buttons pressing, wiimote moves) can be match to perform a
 specific action on your system.
 
-Up to 4 Wiimotes can be used simultaneously (but I don't see
-the point in that :) ).
+Up to 4 Wiimotes can be used simultaneously (but I don't see the point in that,
+just think it's cool). 
 
 
 ===[ Quick Start ]===
@@ -27,6 +26,7 @@ the point in that :) ).
 
 $ cd /path/to/pywii/dir
 $ (emacs|vim) pywii.rc  # <- edit your configuration to adapt it to your system
+(Press simultaneously buttons 1 and 2 on your Wiimote to search sync)
 $ python pywii -f ./pywii.rc
 
 Enjoy
@@ -58,6 +58,11 @@ Yet-to-come features :
 
 Any suggestion welcomed at hugsy __at__ pyc __ li
 
+
+===[ Licence ]===
+
+This tool is released under WTFPLv2. If ever we meet, I may accept a beer if you
+like the tool :)
 
 
 Hope you will like the tool !
