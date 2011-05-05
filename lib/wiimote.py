@@ -3,6 +3,7 @@ import time
 import logging
 import sys
 from subprocess import Popen
+import shlex
 
 try:
     # PyBluez is required
@@ -158,7 +159,7 @@ class Wiimote(threading.Thread):
                 break
 
         if self.cfg.ON_EXIT_HOOK is not None and self.cfg.ON_EXIT_HOOK != "":
-            Popen([self.cfg.ON_EXIT_HOOK], shell=True)
+            Popen(shlex.split(self.cfg.ON_EXIT_HOOK), shell=True)
 
         return
 

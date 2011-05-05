@@ -45,7 +45,7 @@ Features provided :
 
 - *nix platform (tested on recent Fedora & Debian)
 - python 2.5+ (http://python.org)
-- PyBluez (https://code.google.com/pybluez)
+- PyBluez (https://code.google.com/p/pybluez)
 
 
 ===[ Yet to come ]===

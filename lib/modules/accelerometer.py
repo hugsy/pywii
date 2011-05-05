@@ -34,32 +34,33 @@ class Accelerometer (Module):
         if self.wiimote.logger.isEnabledFor(DEBUG) :
             self.wiimote.logger.debug("%s movement detected" % move)
         
-
-        Popen([self.wiimote.cfg.ACCEL_ACTION[move]], shell=True)
-    
+        cmd = self.wiimote.cfg.ACCEL_ACTION[move]
+        self.wiimote.logger.info ("System command : %s" % cmd)
+        Popen([cmd], shell=True)
+     
     
     def update_horizon(self,x_pos):
         """ Detecting horizontal movement """
         if x_pos < self.wiimote.cfg.ACCELEROMETER_ZERO - self.wiimote.cfg.ACCELEROMETER_PRECISION :
-            self.perform_action('left')
+            self.perform_action("left")
         
         if x_pos > self.wiimote.cfg.ACCELEROMETER_ZERO + self.wiimote.cfg.ACCELEROMETER_PRECISION :
-            self.perform_action('right')
+            self.perform_action("right")
 
         
     def update_vertical(self,y_pos):
         """ Detecting depth movement """
         if y_pos > self.wiimote.cfg.ACCELEROMETER_ZERO + self.wiimote.cfg.ACCELEROMETER_PRECISION :
-            self.perform_action('front')
+            self.perform_action("back")
         
         if y_pos < self.wiimote.cfg.ACCELEROMETER_ZERO - self.wiimote.cfg.ACCELEROMETER_PRECISION :
-            self.perform_action('back')
+            self.perform_action("front")
 
             
     def update_depth(self,z_pos):
         """ Detecting vertical movement """
         if z_pos < self.wiimote.cfg.ACCELEROMETER_ZERO - self.wiimote.cfg.ACCELEROMETER_PRECISION :
-            self.perform_action('up')
+            self.perform_action("up")
         
         if z_pos > self.wiimote.cfg.ACCELEROMETER_ZERO + self.wiimote.cfg.ACCELEROMETER_PRECISION :
-            self.perform_action('down')
+            self.perform_action("down")

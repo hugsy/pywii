@@ -1,12 +1,14 @@
 #!/usr/bin/env python
-# $ File: /home/chris/code/pywii/pywii $
-# $ MD5: 60bd7e6ba8ececb1b06a252a52fef4dc $
-# $ By hugsy <hugsy __at__ pyc __dot__ li> $ 
-# $ Last-Modified: Wed Mar 24 00:37:52 2010 $
+# -*- coding: utf-8 -*-
+#
+# $ File: /home/hugsy/code/pywii/pywii $
+# $ MD5: 83b9854b67c31d4ca333b4e8e18aefce $
+# $ By hugsy <hugsy[at]pyc[dot]li> $ 
+# $ Last-Modified: Wed May  4 19:23:20 2011 $ 
 
 __author__  = "hugsy"
-__version__ = 0.1
-__licence__ = "GPL v.2"
+__version__ = "0.1"
+__licence__ = "WTFPL v.2"
 __file__    = "pywii.py"
 __doc__     = """ 
 pywii helps you to easily create interaction between your wiimote and
@@ -37,7 +39,9 @@ def listen_for_wiimotes(timeout):
 
     
 def start(wiimote, idx, configfile):
-    """ Start wiimote thread, and add it to the wiimote threads pool"""
+    """
+    Start wiimote thread, and add it to the wiimote threads pool
+    """
 
     if idx > 4 :
         print ("Cannot handle more than 4 Wiimotes.")
@@ -52,7 +56,10 @@ def start(wiimote, idx, configfile):
 
         
 def start_all(wiimotes, configfile):
-    """ Starts all wiimotes and returns an array of all started wiimotes """
+    """
+    Starts all wiimotes and returns an array of all started wiimotes
+    """
+    
     i = 1
     started = []
     
@@ -77,7 +84,7 @@ def stop_all(wiimotes):
 
 
 if __name__ == "__main__":
-    usage = "usage: %prog [options] arg"
+    usage = "usage: %prog [options] arg\nWritten by {0}".format(__author__)
     parser = OptionParser(usage)
     
     parser.add_option("-f", "--file", dest="filename", default="./pywii.rc",
@@ -92,12 +99,17 @@ if __name__ == "__main__":
 
     configfile = options.filename
     timeout    = options.timeout
-    
+
+    print ("%s, v.%s" % (__file__, __version__))
+    print ("By %s under %s\n" % (__author__, __licence__))
+    print ("Press simultaneously '1' and '2' buttons on your Wiimote")
+       
     wiimotes_found = listen_for_wiimotes(timeout)
     if not wiimotes_found :
-        print ("No wiimote found, exiting...")
+        print ("[-] No wiimote found, exiting...")
         exit(0)
 
     wiimotes = start_all(wiimotes_found, configfile)
-    stop_all(wiimotes) 
+    stop_all(wiimotes)
+    
     exit (0)

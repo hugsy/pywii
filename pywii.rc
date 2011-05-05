@@ -9,28 +9,40 @@ DEBUG_LEVEL : 30
 DISCOVER_DURATION : 5
 SLEEP_DURATION : 5
 SOCK_TIMEOUT_DURATION : 0.1
-# DAEMONIZE: False
+DAEMONIZE: False
 
-ON_EXIT_HOOK : true
-# ON_EXIT_HOOK : "sudo pm-suspend"
+# ON_EXIT_HOOK : true
+ON_EXIT_HOOK : "s2ram.sh"
 
 
 [button_action]
-BUTTON_ACTION_LEFT  : xmms --rew
-BUTTON_ACTION_RIGHT : xmms --fwd
-BUTTON_ACTION_UP    : true
-BUTTON_ACTION_DOWN  : true
-BUTTON_ACTION_PLUS  : amixer set PCM 2dB+
-BUTTON_ACTION_MINUS : amixer set PCM 2dB-
-BUTTON_ACTION_A     : xmms --play-pause
-BUTTON_ACTION_B     : xmms --stop
+
+BUTTON_ACTION_PLUS  : amixer set Master,0 2%+
+BUTTON_ACTION_MINUS : amixer set Master,0 2%-
+
+##### xmms bindings ######
+# BUTTON_ACTION_LEFT  : xmms --rew
+# BUTTON_ACTION_RIGHT : xmms --fwd
+# BUTTON_ACTION_UP    : xmms_fill_playlist
+# BUTTON_ACTION_DOWN  : true
+# BUTTON_ACTION_A     : xmms --play-pause
+# BUTTON_ACTION_B     : xmms --stop
+
+
+##### vlc remote control bindings #####
+BUTTON_ACTION_LEFT  : echo prev |nc -U /tmp/vlc.socket
+BUTTON_ACTION_RIGHT : echo next |nc -U /tmp/vlc.socket
+BUTTON_ACTION_UP    : echo random on |nc -U /tmp/vlc.socket
+BUTTON_ACTION_DOWN  : echo quit |nc -U /tmp/vlc.socket
+BUTTON_ACTION_A     : echo play |nc -U /tmp/vlc.socket
+BUTTON_ACTION_B     : echo pause |nc -U /tmp/vlc.socket
 
 
 [accel_config]
 # 0x80 ie. gravity acceleration
 ACCELEROMETER_ZERO : 128
 # 0x20 : empirical value
-ACCELEROMETER_PRECISION : 32 
+ACCELEROMETER_PRECISION : 32
 
 
 [accel_action]
