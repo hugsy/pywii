@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# $ File: /home/hugsy/code/pywii/pywii $
-# $ MD5: 83b9854b67c31d4ca333b4e8e18aefce $
-# $ By hugsy <hugsy[at]pyc[dot]li> $ 
-# $ Last-Modified: Wed May  4 19:23:20 2011 $ 
 
 __author__  = "hugsy"
-__version__ = "0.1"
+__version__ = 0.1
 __licence__ = "WTFPL v.2"
 __file__    = "pywii.py"
 __doc__     = """ 
@@ -18,22 +14,22 @@ your PC. For the moment, it only works on *nix with python 2.5+
 
 from lib.base import find_wiimotes
 from lib.wiimote import Wiimote
-from optparse import OptionParser
+from argparse import ArgumentParser
 from config import PywiiConfig
 
 
-def listen_for_wiimotes(timeout):
-    """ listen for new wiimotes """
-        
-    attempts = 3 # for inifinite loop, set this to True
+def listen_for_wiimotes(timeout, attempts=3):
+    """
+    Listen for new wiimotes
+    """
+
     new_wiimotes = []
         
     while attempts :
         new_wiimotes = find_wiimotes(timeout)
         if len(new_wiimotes) > 0 :
             break
-        else :
-            attempts -= 1
+        attempts -= 1
             
     return new_wiimotes
 
@@ -50,6 +46,7 @@ def start(wiimote, idx, configfile):
     cfg = PywiiConfig(configfile)
     mac, name = wiimote[0:2]
     wiimote_o = Wiimote(mac, name, idx, cfg)
+    wiimote_o.daemon = True
     wiimote_o.start()
     return wiimote_o
 
@@ -85,7 +82,7 @@ def stop_all(wiimotes):
 
 if __name__ == "__main__":
     usage = "usage: %prog [options] arg\nWritten by {0}".format(__author__)
-    parser = OptionParser(usage)
+    parser = ArgumentParser(usage)
     
     parser.add_option("-f", "--file", dest="filename", default="./pywii.rc",
                       metavar="/path/to/configfile", type="string",
@@ -100,7 +97,7 @@ if __name__ == "__main__":
     configfile = options.filename
     timeout    = options.timeout
 
-    print ("%s, v.%s" % (__file__, __version__))
+    print ("%s, version %.2f" % (__file__, __version__))
     print ("By %s under %s\n" % (__author__, __licence__))
     print ("Press simultaneously '1' and '2' buttons on your Wiimote")
        
@@ -109,7 +106,7 @@ if __name__ == "__main__":
         print ("[-] No wiimote found, exiting...")
         exit(0)
 
-    wiimotes = start_all(wiimotes_found, configfile)
-    stop_all(wiimotes)
+    wiimote = start(wiimotes_found[0], 1, configfile)
+    stop (wiimote)
     
     exit (0)

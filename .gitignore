@@ -4,4 +4,4 @@
 \#*
 test/*
 archives/*
-
+.gitignore

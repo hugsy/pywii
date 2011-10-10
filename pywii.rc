@@ -11,8 +11,8 @@ SLEEP_DURATION : 5
 SOCK_TIMEOUT_DURATION : 0.1
 DAEMONIZE: False
 
-# ON_EXIT_HOOK : true
-ON_EXIT_HOOK : "s2ram.sh"
+ON_EXIT_HOOK : true
+# ON_EXIT_HOOK : "s2ram.sh"
 
 
 [button_action]
@@ -30,8 +30,8 @@ BUTTON_ACTION_MINUS : amixer set Master,0 2%-
 
 
 ##### vlc remote control bindings #####
-BUTTON_ACTION_LEFT  : echo prev |nc -U /tmp/vlc.socket
-BUTTON_ACTION_RIGHT : echo next |nc -U /tmp/vlc.socket
+BUTTON_ACTION_LEFT  : wget 'http://localhost:8080/?control=previous' -O /dev/null 2> /dev/null
+BUTTON_ACTION_RIGHT : wget 'http://localhost:8080/?control=next' -O /dev/null 2> /dev/null
 BUTTON_ACTION_UP    : echo random on |nc -U /tmp/vlc.socket
 BUTTON_ACTION_DOWN  : echo quit |nc -U /tmp/vlc.socket
 BUTTON_ACTION_A     : echo play |nc -U /tmp/vlc.socket
